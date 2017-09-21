@@ -5,6 +5,8 @@
 #include "nativeui/menu_bar.h"
 #include "nativeui/container.h"
 #include "nativeui/button.h"
+#include "nativeui/scroll.h"
+#include "nativeui/text_edit.h"
 
 // OS related
 #include <iostream>
@@ -109,7 +111,9 @@ int main(int argc, const char *argv[]) {
   nu::Container* container = new nu::Container();
   nu::Button* button = new nu::Button("Click me!", nu::Button::Type::Normal);
 
+  // nu::Scroll* scroll = new nu::Scroll();
   nu::Label* byeLabel = new nu::Label("Goodbye World");
+  //nu::TextEdit* textEdit = new nu::TextEdit();
 
   int clickCounter = 0;
 
@@ -124,16 +128,20 @@ int main(int argc, const char *argv[]) {
       // nu::Lifetime::GetCurrent()->Quit();
     });
 
+  // Hierarchy: window, container, scroll, textEdit
+  // scroll->SetContentView(textEdit);
+  // scroll->SetContentSize(nu::SizeF(400, 400));
+
   container->AddChildView(new nu::Label("Hello world"));
   container->AddChildView(byeLabel);
+  container->AddChildView(new nu::Label("Goodbye world"));
   container->AddChildView(button);
-  //container->SetContentSize(nu::SizeF(200, 200));
 
   // Create window with default options, and then show it.
   scoped_refptr<nu::Window> window(new nu::Window(nu::Window::Options()));
   window->SetContentView(container);
   // window->SetContentView(new nu::Label("Hello world, goodbye world"));
-  window->SetContentSize(nu::SizeF(400, 400));
+  window->SetContentSize(nu::SizeF(800, 800));
   window->Center();
   window->Activate();
 
