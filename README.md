@@ -11,6 +11,9 @@ To be a fast (non-bloated) Slack GUI.
 This is *very* early/WIP, do not bother to use, just poking around the
 framework for the most part.
 
+Also - my C/C++ is a bit *LACK*ing (get it?  haha...how many puns can
+we fit in here?).
+
 # License
 
 GPLv3
