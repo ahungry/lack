@@ -12,9 +12,15 @@
 #include <iostream>
 #include <string>
 #include <string.h>
+#include <pthread.h>
+#include <unistd.h>
 
 // Network related
 #include <curl/curl.h>
+
+void *thread_fn(void *ptr);
+
+static char chatBuf[100000];
 
 struct cstring {
   char *ptr;
@@ -75,7 +81,7 @@ void getHttp(char *buf) {
 
   if (curl) {
     printf("Stawt curl request...\n");
-    curl_easy_setopt(curl, CURLOPT_URL, "http://ahungry.com");
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3001/version");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &wt);
     printf("End curl request...\n");
@@ -86,7 +92,7 @@ void getHttp(char *buf) {
 
   // move the struct data into the buffer
   memcpy(buf, wt.ptr, wt.len);
-  printf("Buffer was; %s end buffer\n", buf);
+  //printf("Buffer was; %s end buffer\n", buf);
 }
 
 #if defined(OS_WIN)
@@ -108,40 +114,69 @@ int main(int argc, const char *argv[]) {
 
   printf("Begin process...\n");
 
-  nu::Container* container = new nu::Container();
-  nu::Button* button = new nu::Button("Click me!", nu::Button::Type::Normal);
+  scoped_refptr<nu::Container> container(new nu::Container());
+  scoped_refptr<nu::Button> button(new nu::Button("Click me!", nu::Button::Type::Normal));
+  scoped_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+  scoped_refptr<nu::TextEdit> textEdit(new nu::TextEdit());
+  scoped_refptr<nu::Scroll> scroll(new nu::Scroll);
+  nu::Label *xLabel = new nu::Label("YEA");
 
-  // nu::Scroll* scroll = new nu::Scroll();
-  nu::Label* byeLabel = new nu::Label("Goodbye World");
-  //nu::TextEdit* textEdit = new nu::TextEdit();
+  textEdit->SetStyle("flex", "1");
+  textEdit->SetText("Hope this works!");
+
+  printf("Text Editor text was: %s\n", textEdit->GetText().c_str());
 
   int clickCounter = 0;
 
-  button->on_click.Connect([byeLabel, &clickCounter](nu::Button*) {
-      char buf[100000];
+  button->on_click.Connect([textEdit, byeLabel, &clickCounter](nu::Button*) {
+      //char buf[100000];
       //sprintf(buf, "Clicked the button %d times!!\nYou sure are good at clicking!", ++clickCounter);
-      getHttp(buf);
+      //getHttp(buf);
 
-      std::cout << "The buffer was: \n" << buf << '\n' << " end buffer\n";
+      //printf("Buflen is: %d\n", (int)strlen(buf));
+      //buf[strlen(buf)] = '\n';
+      //buf[strlen(buf) + 0] = '\0';
 
-      byeLabel->SetText(buf);
+      //std::cout << "The buffer was: \n" << buf << '\n' << " end buffer\n";
+      // Append new stuff to the top
+      /*
+      char *cur = (char*)byeLabel->GetText().c_str();
+      size_t b_size = strlen(buf);
+      size_t c_size = strlen(cur);
+      // allocate just what we need
+      char bufUp[c_size + b_size + 1];
+
+      memcpy(bufUp, buf, b_size);
+      bufUp[b_size] = '\n';
+      memcpy(bufUp + b_size + 1, cur, c_size);
+      bufUp[b_size + c_size + 1] = '\0';
+      */
+
+      // byeLabel->SetText(bufUp);
+      byeLabel->SetText(chatBuf);
+      //textEdit->SetText(buf);
+      //printf("Text Editor text was: %s\n", textEdit->GetText().c_str());
       // nu::Lifetime::GetCurrent()->Quit();
     });
 
-  // Hierarchy: window, container, scroll, textEdit
-  // scroll->SetContentView(textEdit);
-  // scroll->SetContentSize(nu::SizeF(400, 400));
-
   container->AddChildView(new nu::Label("Hello world"));
-  container->AddChildView(byeLabel);
+
+  scroll->SetStyle("flex", "1");
+  scroll->SetContentSize(nu::SizeF(800,800));
+  // scroll->SetContentView(textEdit.get());
+  scroll->SetContentView(byeLabel.get());
+  //scroll->SetContentView(xLabel);
+  scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
+
+  container->AddChildView(scroll.get());
+
   container->AddChildView(new nu::Label("Goodbye world"));
-  container->AddChildView(button);
+  container->AddChildView(button.get());
 
   // Create window with default options, and then show it.
   scoped_refptr<nu::Window> window(new nu::Window(nu::Window::Options()));
-  window->SetContentView(container);
-  // window->SetContentView(new nu::Label("Hello world, goodbye world"));
   window->SetContentSize(nu::SizeF(800, 800));
+  window->SetContentView(container.get());
   window->Center();
   window->Activate();
 
@@ -150,8 +185,77 @@ int main(int argc, const char *argv[]) {
       nu::Lifetime::GetCurrent()->Quit();
     });
 
+  // Fire off our own pthread
+  pthread_t thread;
+  int t_ret;
+
+  const char *message = "Hello there...";
+  // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) message);
+
   // Enter message loop.
+  // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) byeLabel.get());
+  //t_ret = pthread_create(&thread, NULL, thread_fn, (void*) xLabel);
+  t_ret = pthread_create(&thread, NULL, thread_fn, NULL);
   lifetime.Run();
 
+  return 0;
+}
+
+
+void *thread_fn(void *ptr)
+{
+  sleep(1);
+  // char *message;
+  // message = (char *) ptr;
+  // int i = 0;
+  // nu::Label *byeLabel;
+  // byeLabel = (nu::Label *) ptr;
+  // scoped_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+
+  char buf[100000];
+  //sprintf(buf, "Clicked the button %d times!!\nYou sure are good at clicking!", ++clickCounter);
+  getHttp(buf);
+
+  printf("Buflen is: %d\n", (int)strlen(buf));
+  //buf[strlen(buf)] = '\n';
+  //buf[strlen(buf) + 0] = '\0';
+
+  //std::cout << "The buffer was: \n" << buf << '\n' << " end buffer\n";
+  // Append new stuff to the top
+  //char *cur = (char*)byeLabel->GetText().c_str();
+  char *cur = (char*)chatBuf;
+  size_t b_size = strlen(buf);
+  size_t c_size = strlen(cur);
+  // allocate just what we need
+  char bufUp[c_size + b_size + 1];
+
+  memcpy(bufUp, buf, b_size);
+  bufUp[b_size] = '\n';
+  memcpy(bufUp + b_size + 1, cur, c_size);
+  bufUp[b_size + c_size + 1] = '\0';
+
+  memcpy(chatBuf, bufUp, strlen(bufUp));
+  printf("Overall content is %s\n", chatBuf);
+
+  //byeLabel->SetText(bufUp);
+
+  pthread_t t;
+  pthread_create(&t, NULL, thread_fn, ptr);
+  pthread_join(t, NULL);
+
+
+  /*
+    for (;;)
+    {
+    sleep(1);
+    //printf("%s \n", message);
+    printf("%d\n", i++);
+    char bufUp[10];
+    sprintf(bufUp, "was: %d\n", i);
+    byeLabel->SetText(bufUp);
+    }
+
+    return (void*)30;
+  */
   return 0;
 }

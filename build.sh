@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 [[ "x86_64 GNU/Linux" == $(uname -a | awk '{print $13 " " $14}') ]] || echo Build only tested with GNU/Linux so far, this may fail!
 
@@ -22,4 +22,4 @@ cd build && cmake -D CMAKE_BUILD_TYPE=Release .. && make
 cd ..
 
 [ -d bin ] || mkdir bin
-mv build/lack bin/
+cp build/lack bin/
