@@ -23,17 +23,17 @@ public:
     size_t len;
   } xstring;
 
-  Http ();
-  ~Http ();
+  //Http ();
+  //~Http ();
 
   void Get ();
-  void Content (char *buf);
+  char *Content ();
 
 private:
   void InitString (struct cstring *wt);
 
   // Adheres to curl callback signature
-  size_t Writefunc (void *ptr, size_t size, size_t nmemb, struct cstring *s);
+  static size_t Writefunc (void *ptr, size_t size, size_t nmemb, struct cstring *s);
 };
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, struct cstring *s)
@@ -144,8 +144,8 @@ void Http::Get ()
 
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, "http://ahungry.com");
-    //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &Http::Writefunc);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->Writefunc);
+    //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &wt);
   }
 
@@ -155,9 +155,10 @@ void Http::Get ()
   memcpy(buf, wt.ptr, wt.len);
 }
 
-void Http::Content (char *buf)
+char *Http::Content ()
 {
-  memcpy(buf, this->buf, strlen(this->buf));
+  return this->buf;
+  //memcpy(buf, this->buf, strlen(this->buf));
 }
 
 void *thread_fn(void *ptr);
@@ -176,11 +177,14 @@ void *thread_fn(void *ptr)
 
   char buf[100000];
   //sprintf(buf, "Clicked the button %d times!!\nYou sure are good at clicking!", ++clickCounter);
-  http_get(buf);
-  // Http *http = new Http();
+  //http_get(buf);
+  //Http *http = new Http();
+  //scoped_refptr<Http> http(new Http());
+  Http *http = new Http();
   //Http *http = {};
-  //http->Get();
-  //http->Content(buf);
+  http->Get();
+  memcpy(buf, http->Content(), strlen(http->Content()));
+  delete http;
 
   printf("Buflen is: %d\n", (int)strlen(buf));
   //buf[strlen(buf)] = '\n';
