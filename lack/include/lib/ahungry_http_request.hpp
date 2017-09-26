@@ -16,6 +16,7 @@ struct cstring {
 class Http
 {
   char buf[10000];
+  const char *domain;
 
 public:
   typedef struct xstring {
@@ -23,7 +24,7 @@ public:
     size_t len;
   } xstring;
 
-  //Http ();
+  Http (const char *domain);
   //~Http ();
 
   void Get ();
@@ -35,6 +36,11 @@ private:
   // Adheres to curl callback signature
   static size_t Writefunc (void *ptr, size_t size, size_t nmemb, struct cstring *s);
 };
+
+Http::Http (const char *domain)
+{
+  this->domain = domain;
+}
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, struct cstring *s)
 {
@@ -71,7 +77,7 @@ void http_get (char *buf)
 {
   //char *buf = this->buf;
   CURL *curl;
-  CURLcode res;
+  // CURLcode res;
 
   struct cstring wt;
   init_string(&wt);
@@ -86,7 +92,7 @@ void http_get (char *buf)
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &wt);
   }
 
-  res = curl_easy_perform(curl);
+  // res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
 
   memcpy(buf, wt.ptr, wt.len);
@@ -96,7 +102,7 @@ size_t Http::Writefunc(void *ptr, size_t size, size_t nmemb, struct cstring *s)
 {
   size_t new_len = s->len + size*nmemb;
 
-  printf("slen: %d, new_len: %d", s->len, new_len);
+  printf("slen: %d, new_len: %d", (int)s->len, (int)new_len);
   //int *realloced = (int*) (realloc(s->ptr, new_len + 1));
   s->ptr = (char*)realloc(s->ptr, new_len + 1);
   //s->ptr = (char*)malloc(new_len + 1);
@@ -134,7 +140,7 @@ void Http::Get ()
 {
   char *buf = this->buf;
   CURL *curl;
-  CURLcode res;
+  // CURLcode res;
 
   struct cstring wt;
   init_string(&wt);
@@ -143,13 +149,14 @@ void Http::Get ()
   curl = curl_easy_init();
 
   if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, "http://ahungry.com");
+    curl_easy_setopt(curl, CURLOPT_URL, this->domain);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->Writefunc);
     //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &wt);
   }
 
-  res = curl_easy_perform(curl);
+  // res = curl_easy_perform(curl);
+  curl_easy_perform(curl);
   curl_easy_cleanup(curl);
 
   memcpy(buf, wt.ptr, wt.len);
@@ -165,6 +172,7 @@ void *thread_fn(void *ptr);
 
 static char chatBuf[100000];
 
+//void *thread_fn(void *ptr)
 void *thread_fn(void *ptr)
 {
   sleep(1);
@@ -180,7 +188,7 @@ void *thread_fn(void *ptr)
   //http_get(buf);
   //Http *http = new Http();
   //scoped_refptr<Http> http(new Http());
-  Http *http = new Http();
+  Http *http = new Http("http://example.org");
   //Http *http = {};
   http->Get();
   memcpy(buf, http->Content(), strlen(http->Content()));

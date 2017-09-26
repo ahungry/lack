@@ -7,6 +7,8 @@
 #include "nativeui/button.h"
 #include "nativeui/scroll.h"
 #include "nativeui/text_edit.h"
+#include "nativeui/gfx/color.h"
+#include "nativeui/gfx/font.h"
 
 // OS related
 #include <iostream>
@@ -46,6 +48,15 @@ int main(int argc, const char *argv[]) {
 
   textEdit->SetStyle("flex", "1");
   textEdit->SetText("Hope this works!");
+  textEdit->SetBackgroundColor(nu::Color(100, 100, 100));
+  byeLabel->SetBackgroundColor(nu::Color(0, 0, 0));
+  byeLabel->SetColor(nu::Color(255, 255, 255));
+
+  // Change the font
+  nu::App *app = nu::App::GetCurrent();
+  nu::Font *font = app->GetDefaultFont();
+  scoped_refptr<nu::Font> my_font(new nu::Font(font->GetName(), font->GetSize() * 2, font->GetWeight(), font->GetStyle()));
+  byeLabel->SetFont(my_font.get());
 
   printf("Text Editor text was: %s\n", textEdit->GetText().c_str());
 
