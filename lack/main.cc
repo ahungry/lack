@@ -1,5 +1,6 @@
 // http://libyue.com/docs/v0.2.0/cpp/api/button.html
 
+#include "base/logging.h"
 #include "base/command_line.h"
 #include "nativeui/nativeui.h"
 #include "nativeui/menu_bar.h"
@@ -41,7 +42,10 @@ int main(int argc, const char *argv[]) {
 
   scoped_refptr<nu::Container> container(new nu::Container());
   scoped_refptr<nu::Button> button(new nu::Button("Click me!", nu::Button::Type::Normal));
-  scoped_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+  //scoped_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+  nu::Label *byeLabel = new nu::Label("Welcome to Lack...");
+  //shared_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+
   scoped_refptr<nu::TextEdit> textEdit(new nu::TextEdit());
   scoped_refptr<nu::Scroll> scroll(new nu::Scroll);
   nu::Label *xLabel = new nu::Label("YEA");
@@ -60,45 +64,29 @@ int main(int argc, const char *argv[]) {
 
   printf("Text Editor text was: %s\n", textEdit->GetText().c_str());
 
-  int clickCounter = 0;
+  int c = 0;
 
-  button->on_click.Connect([textEdit, byeLabel, &clickCounter](nu::Button*) {
-      //char buf[100000];
-      //sprintf(buf, "Clicked the button %d times!!\nYou sure are good at clicking!", ++clickCounter);
-      //getHttp(buf);
+  container->on_draw.Connect ([&c] (nu::Container*, nu::Painter*, const nu::RectF)
+                              {
+                                printf ("In draw loop (%d)...\n", c++);
 
-      //printf("Buflen is: %d\n", (int)strlen(buf));
-      //buf[strlen(buf)] = '\n';
-      //buf[strlen(buf) + 0] = '\0';
+                                return false;
+                              });
 
-      //std::cout << "The buffer was: \n" << buf << '\n' << " end buffer\n";
-      // Append new stuff to the top
-      /*
-      char *cur = (char*)byeLabel->GetText().c_str();
-      size_t b_size = strlen(buf);
-      size_t c_size = strlen(cur);
-      // allocate just what we need
-      char bufUp[c_size + b_size + 1];
-
-      memcpy(bufUp, buf, b_size);
-      bufUp[b_size] = '\n';
-      memcpy(bufUp + b_size + 1, cur, c_size);
-      bufUp[b_size + c_size + 1] = '\0';
-      */
-
-      // byeLabel->SetText(bufUp);
-      byeLabel->SetText(chatBuf);
-      //textEdit->SetText(buf);
-      //printf("Text Editor text was: %s\n", textEdit->GetText().c_str());
-      // nu::Lifetime::GetCurrent()->Quit();
-    });
+  button->on_click.Connect ([textEdit, byeLabel] (nu::Button*)
+                            {
+                              byeLabel->SetText(chatBuf);
+                            });
 
   container->AddChildView(new nu::Label("Hello world"));
 
   scroll->SetStyle("flex", 1, "flex-direction", "column");
   //scroll->SetContentSize(nu::SizeF(800,800));
   // scroll->SetContentView(textEdit.get());
-  scroll->SetContentView(byeLabel.get());
+
+  //scroll->SetContentView(byeLabel.get());
+  scroll->SetContentView(byeLabel);
+
   //scroll->SetContentView(xLabel);
   scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
 
@@ -119,6 +107,21 @@ int main(int argc, const char *argv[]) {
       nu::Lifetime::GetCurrent()->Quit();
     });
 
+  /**
+  nu::Lifetime::GetCurrent()->on_ready.Connect([] {
+      LOG(ERROR) << "OnReady";
+    });
+  */
+
+  /*
+  nu::Signal<void(const std::string&)> event;
+  event.Connect([](const std::string&) {
+      LOG(ERROR) << "OnEvent: " << arg;
+    });
+
+  event.Emit("Emitted");
+  */
+
   // Fire off our own pthread
   pthread_t thread;
   int t_ret;
@@ -129,7 +132,17 @@ int main(int argc, const char *argv[]) {
   // Enter message loop.
   // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) byeLabel.get());
   //t_ret = pthread_create(&thread, NULL, thread_fn, (void*) xLabel);
-  t_ret = pthread_create(&thread, NULL, thread_fn, NULL);
+
+  set_bye_label_ptr ((void*) byeLabel);
+  t_ret = pthread_create (&thread, NULL, thread_fn, (void*) nu::Lifetime::GetCurrent());
+
+  // Working empty thread
+  //t_ret = pthread_create(&thread, NULL, thread_fn, NULL);
+
+  // MAC only apparently...
+  //lifetime.on_ready.Connect ([] { printf ("Lifetime is ready\n"); });
+
+  //lifetime.PostTask (ahungry_http_task);
   lifetime.Run();
 
   return 0;
