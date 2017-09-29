@@ -35,11 +35,6 @@ int main(int argc, const char *argv[]) {
   // Create GUI message loop.
   nu::Lifetime lifetime;
 
-  // Container to hold child elements.
-  //nu::Container container;
-
-  printf("Begin process...\n");
-
   // Set up the main container and it's associated widgets (attach to window at end)
   scoped_refptr<nu::Container> main_container (new nu::Container ());
   main_container->SetStyle ("flex", 1, "flex-direction", "column", "align-items", "stretch");
@@ -65,7 +60,7 @@ int main(int argc, const char *argv[]) {
   channel_scroll->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "flex-start", "max-width", 200);
   text_scroll->SetStyle ("flex", 1, "flex-direction", "row");;
   channel_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
-  text_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
+  text_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Never, nu::Scroll::Policy::Automatic);
   chan_text_container->AddChildView (channel_scroll.get ());
   chan_text_container->AddChildView (text_scroll.get ());
 
@@ -77,9 +72,9 @@ int main(int argc, const char *argv[]) {
   channel_scroll->SetContentView (channel_container.get ());
 
   // Add the text to the text scroll area
-  nu::Label *byeLabel = new nu::Label("Welcome to Lack...");
-  byeLabel->SetBackgroundColor(nu::Color(0, 0, 0));
-  byeLabel->SetColor(nu::Color(255, 255, 255));
+  nu::Label *byeLabel = new nu::Label ("Welcome to Lack...");
+  byeLabel->SetBackgroundColor (nu::Color(0, 0, 0));
+  byeLabel->SetColor (nu::Color(255, 255, 255));
   byeLabel->SetStyle ("flex-direction", "row");
 
   // Change the font
@@ -88,7 +83,6 @@ int main(int argc, const char *argv[]) {
   scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 2, font->GetWeight (), font->GetStyle ()));
   byeLabel->SetFont (my_font.get ());
   text_scroll->SetContentView (byeLabel);
-
 
   // Now, put some buttons in our bottom slot, the interaction_container
   scoped_refptr<nu::Entry> text_entry (new nu::Entry ());
