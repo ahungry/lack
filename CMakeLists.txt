@@ -66,6 +66,7 @@ if(UNIX AND NOT APPLE)
   pkg_search_module(GTK3 REQUIRED gtk+-3.0)
   pkg_search_module(X11 REQUIRED x11)
   pkg_search_module(CURL REQUIRED libcurl)
+  pkg_search_module(WEBSOCKET REQUIRED libwebsockets)
   #target_link_libraries(${APP_NAME}
   #                      pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES})
   target_include_directories(${APP_NAME} PUBLIC
@@ -79,11 +80,11 @@ if(UNIX AND NOT APPLE)
   target_link_libraries(${APP_NAME}
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
                         debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
-                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES})
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
   target_link_libraries(${TEST_NAME}
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
                         debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
-                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES})
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
   target_compile_definitions(${APP_NAME} PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
   target_compile_definitions(${TEST_NAME} PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
   set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS

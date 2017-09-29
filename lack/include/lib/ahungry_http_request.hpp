@@ -9,6 +9,7 @@
 
 // Network related
 #include <curl/curl.h>
+#include <libwebsockets.h>
 
 static char chatBuf[100000];
 
@@ -184,6 +185,8 @@ thread_fn (void *ptr)
   //printf("Overall content is %s\n", chatBuf);
 
   //chat_text_edit->SetText(bufUp);
+
+  // See about getting a websocket connection, yay
 
   // recurse, haha...
   pthread_t t;
