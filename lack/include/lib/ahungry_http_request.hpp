@@ -135,13 +135,13 @@ ahungry_http_task ()
 {
   printf ("[%d] ahungry_http_task as a PostTask\n", c++);
 
-  nu::Label *byeLabel = (nu::Label*) bye_label_ptr;
+  nu::TextEdit *chat_text_edit = (nu::TextEdit*) bye_label_ptr;
 
   const char *msg = "WOOT! %d";
   char *buf = (char *) malloc (sizeof (c) + strlen (msg));
 
   sprintf (buf, msg, c);
-  byeLabel->SetText(buf);
+  chat_text_edit->SetText(buf);
 
   printf ("PostTask success!\n");
 
@@ -152,7 +152,7 @@ ahungry_http_task ()
 void*
 thread_fn (void *ptr)
 {
-  sleep(10);
+  sleep(3);
 
   nu::Lifetime *lifetime = (nu::Lifetime*) ptr;
   lifetime->PostTask (ahungry_http_task);
@@ -183,7 +183,7 @@ thread_fn (void *ptr)
   memcpy(chatBuf, bufUp, strlen(bufUp));
   //printf("Overall content is %s\n", chatBuf);
 
-  //byeLabel->SetText(bufUp);
+  //chat_text_edit->SetText(bufUp);
 
   // recurse, haha...
   pthread_t t;
@@ -198,7 +198,7 @@ thread_fn (void *ptr)
     printf("%d\n", i++);
     char bufUp[10];
     sprintf(bufUp, "was: %d\n", i);
-    byeLabel->SetText(bufUp);
+    chat_text_edit->SetText(bufUp);
     }
 
     return (void*)30;

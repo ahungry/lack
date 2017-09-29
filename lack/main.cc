@@ -58,7 +58,9 @@ int main(int argc, const char *argv[]) {
   scoped_refptr<nu::Scroll> channel_scroll (new nu::Scroll ());
   scoped_refptr<nu::Scroll> text_scroll (new nu::Scroll ());
   channel_scroll->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "flex-start", "max-width", 200);
-  text_scroll->SetStyle ("flex", 1, "flex-direction", "row");;
+  channel_scroll->SetBackgroundColor (nu::Color (0, 100, 50));
+  text_scroll->SetStyle ("flex", 1, "flex-direction", "row", "margin-all", 50);
+  text_scroll->SetBackgroundColor (nu::Color (100, 0, 0));
   channel_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
   text_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Never, nu::Scroll::Policy::Automatic);
   chan_text_container->AddChildView (channel_scroll.get ());
@@ -67,22 +69,61 @@ int main(int argc, const char *argv[]) {
   // List of labels / buttons for the channel list, and add the container to the scroll
   scoped_refptr<nu::Container> channel_container (new nu::Container ());
   channel_container->SetStyle ("justify-content", "center");
+
+  const char *channels[3] = {
+    "First Channel",
+    "Second Channel",
+    "Some really long channel name, gotta love ptrs!"
+  };
+
+  nu::Button *channel_buttons[3];
+
+  char *buf = NULL;
+  int chan_size = 0;
+
+  // How to easily walk through each element of an array of ptrs (total size divided by per-member size).
+  for (int i = 0; i < (sizeof channels / sizeof *channels); i++)
+    {
+      chan_size = strlen (channels[i]);
+      buf = (char *) realloc (buf, 1 + chan_size);
+
+      if (NULL == buf)
+        {
+          fprintf (stderr, "Failed to malloc() for channel buf\n");
+          exit (EXIT_FAILURE);
+        }
+
+      memcpy (buf, channels[i], chan_size);
+      buf[chan_size] = '\0';
+
+      scoped_refptr<nu::Button> channel_button (new nu::Button (buf, nu::Button::Type::Normal));
+      channel_button->SetBackgroundColor (nu::Color (30, 145, 90));
+      channel_container->AddChildView (channel_button.get ());
+      channel_buttons[i] = channel_button.get ();
+      printf ("Chan name: %s initialized (%s) with strlen of: %d!\n", channels[i], buf, strlen (channels[i]));
+    }
+
+  free (buf);
+  buf = NULL;
+
   channel_container->AddChildView (new nu::Button ("First Channel", nu::Button::Type::Normal));
   channel_container->AddChildView (new nu::Button ("Second Channel", nu::Button::Type::Normal));
   channel_scroll->SetContentView (channel_container.get ());
 
   // Add the text to the text scroll area
-  nu::Label *byeLabel = new nu::Label ("Welcome to Lack...");
-  byeLabel->SetBackgroundColor (nu::Color(0, 0, 0));
-  byeLabel->SetColor (nu::Color(255, 255, 255));
-  byeLabel->SetStyle ("flex-direction", "row");
+  // nu::Label *chat_text_edit = new nu::Label ("Welcome to Lack...");
+  nu::TextEdit *chat_text_edit = new nu::TextEdit ();
+  chat_text_edit->SetText ("Welcome to Lack...");
+  // chat_text_edit->SetBackgroundColor (nu::Color (0, 0, 0));
+  chat_text_edit->SetColor (nu::Color (200, 200, 200));
+  chat_text_edit->SetStyle ("flex", 1, "flex-direction", "row");
 
   // Change the font
   nu::App *app = nu::App::GetCurrent ();
   nu::Font *font = app->GetDefaultFont ();
   scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 2, font->GetWeight (), font->GetStyle ()));
-  byeLabel->SetFont (my_font.get ());
-  text_scroll->SetContentView (byeLabel);
+  chat_text_edit->SetFont (my_font.get ());
+  text_scroll->SetContentView (chat_text_edit);
 
   // Now, put some buttons in our bottom slot, the interaction_container
   scoped_refptr<nu::Entry> text_entry (new nu::Entry ());
@@ -91,9 +132,9 @@ int main(int argc, const char *argv[]) {
 
   scoped_refptr<nu::Button> button (new nu::Button ("Send", nu::Button::Type::Normal));
   button->SetStyle ("max-width", 50);
-  button->on_click.Connect ([byeLabel] (nu::Button*)
+  button->on_click.Connect ([chat_text_edit] (nu::Button*)
                             {
-                              byeLabel->SetText (chatBuf);
+                              chat_text_edit->SetText (chatBuf);
                             });
   interaction_container->AddChildView (button.get ());
 
@@ -102,8 +143,8 @@ int main(int argc, const char *argv[]) {
   interaction_container->AddChildView (help_button.get ());
 
   // scoped_refptr<nu::Container> container(new nu::Container());
-  // //scoped_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
-  // //shared_refptr<nu::Label> byeLabel(new nu::Label("Goodbye World!"));
+  // //scoped_refptr<nu::Label> chat_text_edit(new nu::Label("Goodbye World!"));
+  // //shared_refptr<nu::Label> chat_text_edit(new nu::Label("Goodbye World!"));
 
   // scoped_refptr<nu::TextEdit> textEdit(new nu::TextEdit());
   // scoped_refptr<nu::Scroll> scroll(new nu::Scroll);
@@ -128,8 +169,8 @@ int main(int argc, const char *argv[]) {
   // //scroll->SetContentSize(nu::SizeF(800,800));
   // // scroll->SetContentView(textEdit.get());
 
-  // //scroll->SetContentView(byeLabel.get());
-  // // scroll->SetContentView(byeLabel);
+  // //scroll->SetContentView(chat_text_edit.get());
+  // // scroll->SetContentView(chat_text_edit);
 
   // //scroll->SetContentView(xLabel);
   // scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
@@ -181,10 +222,10 @@ int main(int argc, const char *argv[]) {
   // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) message);
 
   // Enter message loop.
-  // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) byeLabel.get());
+  // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) chat_text_edit.get());
   //t_ret = pthread_create(&thread, NULL, thread_fn, (void*) xLabel);
 
-  set_bye_label_ptr ((void*) byeLabel);
+  set_bye_label_ptr ((void*) chat_text_edit);
   t_ret = pthread_create (&thread, NULL, thread_fn, (void*) nu::Lifetime::GetCurrent());
 
   // Working empty thread
