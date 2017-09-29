@@ -42,27 +42,27 @@ int main(int argc, const char *argv[]) {
 
   // Set up the main container and it's associated widgets (attach to window at end)
   scoped_refptr<nu::Container> main_container (new nu::Container ());
-  main_container->SetStyle ("flex", 1, "flex-direction", "column");
+  main_container->SetStyle ("flex", 1, "flex-direction", "column", "align-items", "stretch");
 
   // Add the top banner to the container
   scoped_refptr<nu::Label> banner_label (new nu::Label ("Welcome to Lack!"));
-  banner_label->SetStyle ("flex", 1, "justify-content", "center");
+  banner_label->SetStyle ("flex", 1, "justify-content", "center", "max-height", 50);
   main_container->AddChildView (banner_label.get ());
 
   // Create the chan_text_container area
   scoped_refptr<nu::Container> chan_text_container (new nu::Container ());
-  chan_text_container->SetStyle ("flex", 1, "flex-direction", "row");
+  chan_text_container->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "stretch");
   main_container->AddChildView (chan_text_container.get ());
 
   // Create the interaction_container at the bottom
   scoped_refptr<nu::Container> interaction_container (new nu::Container ());
-  interaction_container->SetStyle ("flex", 1, "flex-direction", "row");
+  interaction_container->SetStyle ("flex", 1, "flex-direction", "row", "max-height", 100, "align-items", "stretch");
   main_container->AddChildView (interaction_container.get ());
 
   // Now, add the channel_scroll and text_scroll parts to the chan_text_container
   scoped_refptr<nu::Scroll> channel_scroll (new nu::Scroll ());
   scoped_refptr<nu::Scroll> text_scroll (new nu::Scroll ());
-  channel_scroll->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "stretch", "max-width", 100);
+  channel_scroll->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "flex-start", "max-width", 200);
   text_scroll->SetStyle ("flex", 1, "flex-direction", "row");;
   channel_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
   text_scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
@@ -92,9 +92,11 @@ int main(int argc, const char *argv[]) {
 
   // Now, put some buttons in our bottom slot, the interaction_container
   scoped_refptr<nu::Entry> text_entry (new nu::Entry ());
+  text_entry->SetStyle ("flex", 1);
   interaction_container->AddChildView (text_entry.get ());
 
-  scoped_refptr<nu::Button> button (new nu::Button ("Click me!", nu::Button::Type::Normal));
+  scoped_refptr<nu::Button> button (new nu::Button ("Send", nu::Button::Type::Normal));
+  button->SetStyle ("max-width", 50);
   button->on_click.Connect ([byeLabel] (nu::Button*)
                             {
                               byeLabel->SetText (chatBuf);
@@ -102,6 +104,7 @@ int main(int argc, const char *argv[]) {
   interaction_container->AddChildView (button.get ());
 
   scoped_refptr<nu::Button> help_button (new nu::Button ("Help", nu::Button::Type::Normal));
+  help_button->SetStyle ("max-width", 50);
   interaction_container->AddChildView (help_button.get ());
 
   // scoped_refptr<nu::Container> container(new nu::Container());
