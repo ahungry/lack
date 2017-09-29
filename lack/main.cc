@@ -55,6 +55,7 @@ int main(int argc, const char *argv[]) {
   textEdit->SetBackgroundColor(nu::Color(100, 100, 100));
   byeLabel->SetBackgroundColor(nu::Color(0, 0, 0));
   byeLabel->SetColor(nu::Color(255, 255, 255));
+  byeLabel->SetStyle ("flex-direction", "row");
 
   // Change the font
   nu::App *app = nu::App::GetCurrent();
@@ -80,7 +81,7 @@ int main(int argc, const char *argv[]) {
 
   container->AddChildView(new nu::Label("Hello world"));
 
-  scroll->SetStyle("flex", 1, "flex-direction", "column");
+  scroll->SetStyle("flex", 1, "flex-direction", "row");
   //scroll->SetContentSize(nu::SizeF(800,800));
   // scroll->SetContentView(textEdit.get());
 
@@ -90,7 +91,19 @@ int main(int argc, const char *argv[]) {
   //scroll->SetContentView(xLabel);
   scroll->SetScrollbarPolicy(nu::Scroll::Policy::Automatic, nu::Scroll::Policy::Automatic);
 
-  container->AddChildView(scroll.get());
+  // Keep a list of targets I guess
+  scoped_refptr<nu::Container> channel_container (new nu::Container ());
+  channel_container->SetStyle ("justify-content", "center");
+  channel_container->AddChildView (new nu::Label("First Channel"));
+  channel_container->AddChildView (new nu::Label("Second Channel"));
+
+  scoped_refptr<nu::Scroll> channel_scroll (new nu::Scroll);
+  channel_scroll->SetStyle ("flex", 1, "flex-direction", "row", "align-items", "stretch", "max-width", 100);
+  channel_scroll->SetContentView (channel_container.get ());
+
+  container->SetStyle ("flex-direction", "row");
+  container->AddChildView (channel_scroll.get ());
+  container->AddChildView (scroll.get ());
 
   container->AddChildView(new nu::Label("Goodbye world"));
   container->AddChildView(button.get());

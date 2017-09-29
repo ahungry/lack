@@ -152,7 +152,7 @@ ahungry_http_task ()
 void*
 thread_fn (void *ptr)
 {
-  sleep(1);
+  sleep(10);
 
   nu::Lifetime *lifetime = (nu::Lifetime*) ptr;
   lifetime->PostTask (ahungry_http_task);

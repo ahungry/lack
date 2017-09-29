@@ -1,0 +1,16 @@
++---------------------------------------------------------------------------+    window -> container -> banner_label / chan_text_container / text_entry
+|                             banner_label                                  |    chan_text_container -> channel_scroll / text_scroll
++----------------+----------------------------------------------------------+    channel_scroll -> button / button...
+| channel_scroll |   text_scroll                                            |    text_scroll -> text_edit
+|   button       |     text_edit                                            |
+|   button       |                                                          |
+|   ...          |                                                          |
+|                |                                                          |
+|                |                                                          |
+|                |                                                          |
+|                |                                                          |
++----------------+----------------------------------------------------------|
+|                                                                           |
+|                      text_entry                                           |
+|                                                                           |
++---------------------------------------------------------------------------+
