@@ -1,16 +1,16 @@
-+---------------------------------------------------------------------------+    window -> container -> banner_label / chan_text_container / text_entry
++---------------------------------------------------------------------------+    window -> main_container -> banner_label / chan_text_container / interaction_container
 |                             banner_label                                  |    chan_text_container -> channel_scroll / text_scroll
 +----------------+----------------------------------------------------------+    channel_scroll -> button / button...
 | channel_scroll |   text_scroll                                            |    text_scroll -> text_edit
-|   button       |     text_edit                                            |
+|   button       |     text_edit                                            |    interaction_container -> text_entry / go_button / help_button
 |   button       |                                                          |
 |   ...          |                                                          |
 |                |                                                          |
 |                |                                                          |
 |                |                                                          |
 |                |                                                          |
-+----------------+----------------------------------------------------------|
-|                                                                           |
-|                      text_entry                                           |
-|                                                                           |
-+---------------------------------------------------------------------------+
++----------------+---------------------------------+-----------+------------|
+|                                                  |           |            |
+|                      text_entry                  | go_button | help_button|
+|                                                  |           |            |
++--------------------------------------------------+-----------+------------+
