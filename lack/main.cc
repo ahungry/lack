@@ -134,7 +134,8 @@ int main(int argc, const char *argv[]) {
   button->SetStyle ("max-width", 50);
   button->on_click.Connect ([chat_text_edit] (nu::Button*)
                             {
-                              chat_text_edit->SetText (chatBuf);
+                              std::string buf = chatBuf;
+                              chat_text_edit->SetText (buf);
                             });
   interaction_container->AddChildView (button.get ());
 

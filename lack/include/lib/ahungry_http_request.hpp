@@ -11,7 +11,7 @@
 #include <curl/curl.h>
 #include <libwebsockets.h>
 
-static char chatBuf[100000];
+static char *chatBuf;
 
 void *thread_fn(void *ptr);
 
@@ -28,7 +28,7 @@ public:
   } cstring;
 
   Http (const char *domain);
-  //~Http ();
+  ~Http ();
 
   void Get ();
   char *Content ();
@@ -44,6 +44,12 @@ Http::Http (const char *domain)
 {
   printf ("Start...");
   this->domain = domain;
+}
+
+Http::~Http ()
+{
+  free (this->buf);
+  this->buf = NULL;
 }
 
 size_t Http::Writefunc(void *ptr, size_t size, size_t nmemb, Http::cstring *s)
@@ -112,7 +118,11 @@ void Http::Get ()
     }
 
   memcpy (this->buf, wt.ptr, wt.len);
-  this->buf[wt.len + 1] = '\0';
+  this->buf[wt.len] = '\0';
+
+  // Clean up our callback struct
+  free (wt.ptr);
+  wt.ptr = NULL;
 }
 
 char *Http::Content ()
@@ -141,6 +151,12 @@ ahungry_http_task ()
   const char *msg = "WOOT! %d";
   char *buf = (char *) malloc (sizeof (c) + strlen (msg));
 
+  if (NULL == buf)
+    {
+      fprintf (stderr, "Failed to malloc() in ahungry_http_task\n");
+      exit (EXIT_FAILURE);
+    }
+
   sprintf (buf, msg, c);
   chat_text_edit->SetText(buf);
 
@@ -153,38 +169,51 @@ ahungry_http_task ()
 void*
 thread_fn (void *ptr)
 {
-  sleep(3);
+  sleep(0);
 
   nu::Lifetime *lifetime = (nu::Lifetime*) ptr;
   lifetime->PostTask (ahungry_http_task);
 
-  char buf[100000];
-  Http *http = new Http("http://example.org");
-
-  printf ("Hello");
+  char *buf = NULL;
+  Http *http = new Http ("http://example.com");
+  //Http *http = new Http("http://localhost:5000");
 
   http->Get();
-  memcpy(buf, http->Content(), strlen(http->Content()));
+
+  int content_size = strlen (http->Content ());
+
+  printf ("content_size was: %d\n", content_size);
+
+  buf = (char *) malloc (content_size);
+
+  if (NULL == buf)
+    {
+      fprintf (stderr, "Failed to malloc() for buf in thread_fn\n");
+      exit (EXIT_FAILURE);
+    }
+
+  memcpy (buf, http->Content (), content_size + 1);
+
   delete http;
 
-  printf("Buflen is: %d\n", (int)strlen(buf));
+  printf("Buflen is: %d\n", strlen (buf));
 
-  char *cur = (char*)chatBuf;
-  size_t b_size = strlen(buf);
-  size_t c_size = strlen(cur);
+  if (NULL == chatBuf)
+    {
+      chatBuf = (char *) malloc (1);
+      chatBuf[0] = '\0';
+    }
 
-  // allocate just what we need
-  char bufUp[c_size + b_size + 1];
+  // Just append the received text to the chatBuf
+  chatBuf = (char *) realloc (chatBuf, strlen (chatBuf) + strlen (buf) + 1);
 
-  memcpy(bufUp, buf, b_size);
-  bufUp[b_size] = '\n';
-  memcpy(bufUp + b_size + 1, cur, c_size);
-  bufUp[b_size + c_size + 1] = '\0';
+  if (NULL == chatBuf)
+    {
+      fprintf (stderr, "Failed to realloc() to chatBuf\n");
+      exit (EXIT_FAILURE);
+    }
 
-  memcpy(chatBuf, bufUp, strlen(bufUp));
-  //printf("Overall content is %s\n", chatBuf);
-
-  //chat_text_edit->SetText(bufUp);
+  memcpy (chatBuf + strlen (chatBuf), buf, strlen (buf) + 1);
 
   // See about getting a websocket connection, yay
 
