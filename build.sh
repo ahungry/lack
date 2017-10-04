@@ -1,6 +1,15 @@
 #!/bin/bash
 
-[[ "x86_64 GNU/Linux" == $(uname -a | awk '{print $13 " " $14}') ]] || echo Build only tested with GNU/Linux so far, this may fail!
+if [ "Darwin" == $(uname) ]; then
+  OS="mac"
+elif [ "x86_64 GNU/Linux" == $(uname -a | awk '{print $13 " " $14}') ]; then
+  OS="linux"
+else
+  echo "OS not supported."
+  exit 1
+fi
+
+URL="https://github.com/yue/yue/releases/download/v0.2.0/libyue_v0.2.0_${OS}_x64.zip"
 
 # Grab the Yue Release and store in a yue directory
 [ -d yue ] || mkdir yue
@@ -8,7 +17,9 @@
 cd yue
 
 if [ ! -d include ]; then
-    [ -e libyue.zip ] || wget https://github.com/yue/yue/releases/download/v0.2.0/libyue_v0.2.0_linux_x64.zip -O libyue.zip
+    echo "Downloading $URL"
+
+    [ -e libyue.zip ] || wget $URL -O libyue.zip
     unzip libyue.zip
 fi
 
@@ -18,7 +29,7 @@ cd ..
 # Make build dir for CMAKE
 [ -d build ] || mkdir build
 
-cd build && cmake -D CMAKE_BUILD_TYPE=Release .. && make
+cd build && cmake -D CMAKE_BUILD_TYPE=Release .. && make VERBOSE=1
 cd ..
 
 [ -d bin ] || mkdir bin
