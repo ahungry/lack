@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "Darwin" == $(uname) ]; then
+if [ "Darwin" == "$(uname)" ]; then
   OS="mac"
-elif [ "x86_64 GNU/Linux" == $(uname -a | awk '{print $13 " " $14}') ]; then
+elif [ "x86_64 GNU/Linux" == "$(uname -a | awk '{print $13 " " $14}')" ]; then
   OS="linux"
 else
   echo "OS not supported."
