@@ -26,13 +26,51 @@ target_include_directories(${TEST_NAME} PRIVATE "yue/include" "lack/include")
 
 # macOS configuration.
 if(APPLE)
+  list(APPEND CMAKE_PREFIX_PATH /usr/local)
+
+  set(CURL_LIBRARY "-lcurl")
+  find_package(CURL)
+  find_package(LibWebSockets)
+
+  if (LibWebSockets_FOUND)
+    include_directories(${LIBWEBSOCKETS_INCLUDE_DIRS})
+    target_link_libraries(${APP_NAME} ${LIBWEBSOCKETS_LIBRARIES})
+  else()
+    message("not found libwebsockets")
+  endif()
+
+  if (CURL_FOUND)
+    include_directories(${CURL_INCLUDE_DIR})
+    target_link_libraries(${APP_NAME} ${CURL_LIBRARIES})
+  else()
+    message("CURL not found")
+  endif()
+
   find_library(APPKIT AppKit)
   find_library(IOKIT IOKit)
   find_library(SECURITY Security)
+  
   target_link_libraries(${APP_NAME}
                         ${APPKIT} ${IOKIT} ${SECURITY}
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
-                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a)
+                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
+
+  target_link_libraries(${TEST_NAME}
+                        ${APPKIT} ${IOKIT} ${SECURITY}
+                        optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
+                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
+
+#  target_link_libraries(${APP_NAME}
+#                        optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
+#                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+#                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
+#  target_link_libraries(${TEST_NAME}
+#                        optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
+#                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+#                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
+
   set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS
                         "-Wl,-dead_strip")
 endif()
