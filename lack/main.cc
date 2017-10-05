@@ -20,14 +20,23 @@
 
 // Lack related
 #include "lib/ahungry_http_request.hpp"
+#include "lib/ahungry_ws.hpp"
 
 #if defined(OS_WIN)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   base::CommandLine::Init(0, nullptr);
 #else
-int main(int argc, const char *argv[]) {
-  base::CommandLine::Init(argc, argv);
+  int
+    main(int argc, const char *argv[]) {
+    base::CommandLine::Init(argc, argv);
 #endif
+
+    if (argc < 2)
+      {
+        fprintf (stderr, "Usage: lack <slack xoxs-token-string>\n");
+
+        return 1;
+      }
 
   // Initialize the global instance of nativeui.
   nu::State state;
@@ -121,7 +130,7 @@ int main(int argc, const char *argv[]) {
   // Change the font
   nu::App *app = nu::App::GetCurrent ();
   nu::Font *font = app->GetDefaultFont ();
-  scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 2, font->GetWeight (), font->GetStyle ()));
+  scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.2, font->GetWeight (), font->GetStyle ()));
   chat_text_edit->SetFont (my_font.get ());
   text_scroll->SetContentView (chat_text_edit);
 
@@ -226,8 +235,12 @@ int main(int argc, const char *argv[]) {
   // t_ret = pthread_create(&thread, NULL, thread_fn, (void*) chat_text_edit.get());
   //t_ret = pthread_create(&thread, NULL, thread_fn, (void*) xLabel);
 
-  set_bye_label_ptr ((void*) chat_text_edit);
-  t_ret = pthread_create (&thread, NULL, thread_fn, (void*) nu::Lifetime::GetCurrent());
+  // Just some testing stuff to fetch HTML data.
+  // set_bye_label_ptr ((void*) chat_text_edit);
+  // t_ret = pthread_create (&thread, NULL, thread_fn, (void*) nu::Lifetime::GetCurrent());
+
+  // Launch the websocket thread.
+  slack_rtm_connect ((char *) argv[1], nu::Lifetime::GetCurrent (), chat_text_edit);
 
   // Working empty thread
   //t_ret = pthread_create(&thread, NULL, thread_fn, NULL);
