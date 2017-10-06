@@ -9,20 +9,25 @@ endif()
 project(Lack)
 set(APP_NAME "lack")
 set(TEST_NAME "lackt")
+set(TEST_JSON_HANDLER "test_json_handler")
 
 # Define tests - seriously, need tests...
 enable_testing()
 add_test(ahungry_http_request ${TEST_NAME} ) # Args to come next
+add_test(test_json_handler ${TEST_JSON_HANDLER} ) # Args to come next
 
 
 add_executable(${APP_NAME} ${APP_NAME}/main.cc)
 add_executable(${TEST_NAME} ${APP_NAME}/include/lib/t/main.cc)
+add_executable(${TEST_JSON_HANDLER} ${APP_NAME}/include/lib/t/test_json_handler.cc)
 
 set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 11)
 set_property(TARGET ${TEST_NAME} PROPERTY CXX_STANDARD 11)
+set_property(TARGET ${TEST_JSON_HANDLER} PROPERTY CXX_STANDARD 11)
 
 target_include_directories(${APP_NAME} PRIVATE "yue/include" "lack/include")
 target_include_directories(${TEST_NAME} PRIVATE "yue/include" "lack/include")
+target_include_directories(${TEST_JSON_HANDLER} PRIVATE "yue/include" "lack/include")
 
 # macOS configuration.
 if(APPLE)
@@ -57,6 +62,12 @@ if(APPLE)
                         pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
 
   target_link_libraries(${TEST_NAME}
+                        ${APPKIT} ${IOKIT} ${SECURITY}
+                        optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
+                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES})
+
+  target_link_libraries(${TEST_JSON_HANDLER}
                         ${APPKIT} ${IOKIT} ${SECURITY}
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
                         debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
@@ -112,9 +123,13 @@ if(UNIX AND NOT APPLE)
                              ${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIRS})
   target_include_directories(${TEST_NAME} PUBLIC
                              ${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIRS})
+  target_include_directories(${TEST_JSON_HANDLER} PUBLIC
+                             ${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIRS})
   target_compile_options(${APP_NAME} PUBLIC
                          ${GTK3_CFLAGS_OTHER} ${X11_CFLAGS_OTHER})
   target_compile_options(${TEST_NAME} PUBLIC
+                         ${GTK3_CFLAGS_OTHER} ${X11_CFLAGS_OTHER})
+  target_compile_options(${TEST_JSON_HANDLER} PUBLIC
                          ${GTK3_CFLAGS_OTHER} ${X11_CFLAGS_OTHER})
   target_link_libraries(${APP_NAME}
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
@@ -124,10 +139,17 @@ if(UNIX AND NOT APPLE)
                         optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
                         debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
                         pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES} ${JSONC_LIBRARIES})
+  target_link_libraries(${TEST_JSON_HANDLER}
+                        optimized ${CMAKE_SOURCE_DIR}/yue/lib/libyue.a
+                        debug ${CMAKE_SOURCE_DIR}/yue/lib/libyued.a
+                        pthread dl ${GTK3_LIBRARIES} ${X11_LIBRARIES} ${CURL_LIBRARIES} ${WEBSOCKET_LIBRARIES} ${JSONC_LIBRARIES})
   target_compile_definitions(${APP_NAME} PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
   target_compile_definitions(${TEST_NAME} PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
+  target_compile_definitions(${TEST_JSON_HANDLER} PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
   set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS
                         "-fdata-sections -ffunction-sections -Wl,--gc-section")
   set_target_properties(${TEST_NAME} PROPERTIES LINK_FLAGS
+                        "-fdata-sections -ffunction-sections -Wl,--gc-section")
+  set_target_properties(${TEST_JSON_HANDLER} PROPERTIES LINK_FLAGS
                         "-fdata-sections -ffunction-sections -Wl,--gc-section")
 endif()

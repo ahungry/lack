@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "json_handler.hpp"
+
 static struct lws *wsi_basic;
 int force_exit = 0;
 static unsigned int opts;
@@ -47,44 +49,42 @@ display_rx_buf ()
   // @todo Parse out the JSON parts of message
   // Ideally in it's own class or codebase.
   // ref: https://json-c.github.io/json-c/json-c-0.12.1/doc/html/json__tokener_8h.html
-  // At this point, we can almost guarantee rx_buf is valid json.
-  // json_object *jobj = NULL;
-  // const char *mystring = "{\"hello\":\"world\", \"age\": 30}";;
+  printf ("Rx: %s\n\n", rx_buf);
 
-  // jobj = json_tokener_parse (mystring);
-
-  // json_object *hello = NULL;
-  // json_object_object_get_ex (jobj, "hello", &hello);
-  // const char *hello_val = json_object_get_string (hello);
-
-  // json_object *o_age = NULL;
-  // json_object_object_get_ex (jobj, "age", &o_age);
-  // int age = json_object_get_int (o_age);
-
-  // // Success, use jobj here.
-  // printf ("It was: %s with age: %d\n", hello_val, age);
-
-  // // json_tokener_free (tok);
-  // json_object_put (jobj);
-
-
-
-  int len = strlen (gui_chat_text_edit->GetText ().c_str ());
+  // Find out what type of JSON we have received.
+  json_object *j = json_to_object ((char *) rx_buf);
+  int type = j_get_type (j);    /* See what type of object */
   char *buf = NULL;
-  buf = (char *) malloc (sizeof (buf) * (len + strlen (rx_buf)) + 2);
 
-  memcpy (buf, rx_buf, strlen (rx_buf));
-  buf[strlen (rx_buf)] = '\n';
-  memcpy (buf + strlen (rx_buf) + 1, gui_chat_text_edit->GetText ().c_str (), len);
-  buf[strlen (rx_buf) + len] = '\0';
+  switch (type)
+    {
+      // @todo Refactor to dispatch text to a specific channel.
+    case SLACK_TYPE_MESSAGE:
+      json_object *j_text = NULL;
+      json_object_object_get_ex (j, "text", &j_text);
+      const char *text = json_object_get_string (j_text);
+      int len_text = strlen (text);
 
-  printf ("%s\n\n", rx_buf);
+      printf ("Received text: %s of length: %d\n\n", text, len_text);
 
-  gui_chat_text_edit->SetText (buf);
-  free (rx_buf);
+      int len = strlen (gui_chat_text_edit->GetText ().c_str ());
+      buf = (char *) malloc (10 * sizeof (buf) * (len + len_text + 2));
+      memcpy (buf, text, len_text);
+      buf[len_text] = '\n';
+      memcpy (buf + len_text + 1, gui_chat_text_edit->GetText ().c_str (), len);
+      buf[len_text + len] = '\0';
+
+      printf ("Rx: %s\n\n", rx_buf);
+      gui_chat_text_edit->SetText (buf);
+
+      break;
+    }
+
+  free (rx_buf); // Bad idea to have this handle the free
   free (buf);
   rx_buf = NULL;
   buf = NULL;
+  json_object_put (j);
 
   return 0;
 }
@@ -127,11 +127,26 @@ static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reas
         // We could copy in batches, but we need to count braces.
         for (uint i = 0; i < len; i++)
           {
+            // If we did the PT dispatch, this could be null in our loop.
+            if (NULL == rx_buf)
+              {
+                rx_buf = (char *) realloc (rx_buf, sizeof (rx_buf) + len); // May be a couple bytes too big.
+              }
+
             if ('{' == ((char*) in)[i]) json_brace_count++;
             if ('}' == ((char*) in)[i]) json_brace_count--;
+
+            // Copy in one char at a time.
+            rx_buf[rx_buflen + i] = ((char *) in)[i];
+
+            // If even braces, flush buffer and output.
+            if (!json_brace_count) {
+              // Output to term and GUI
+              gui_lifetime->PostTask (display_rx_buf);
+            }
           }
 
-        memcpy (rx_buf + rx_buflen, (char *) in, len + 1);
+        // memcpy (rx_buf + rx_buflen, (char *) in, len + 1);
 
         // If even braces, flush buffer and output.
         if (!json_brace_count) {

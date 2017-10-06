@@ -2,7 +2,7 @@
 
 if [ "Darwin" == "$(uname)" ]; then
   OS="mac"
-elif [ "x86_64 GNU/Linux" == "$(uname -a | awk '{print $13 " " $14}')" ]; then
+elif [[ "$(uname -a)" =~ "x86_64 GNU/Linux" ]]; then
   OS="linux"
 else
   echo "OS not supported."
