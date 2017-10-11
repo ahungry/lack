@@ -89,7 +89,17 @@ display_rx_buf ()
 
       printf ("To channel: %s of length: %d\n\n", channel, strlen (channel));
 
-      channel_push ((char *) channel, (char *) text);
+      // Add the user name
+      json_object *j_user = NULL;
+      json_object_object_get_ex (j, "user", &j_user);
+
+      // @todo Translate user to a display name
+      // {"type":"flannel", "subtype":"user_query_request"}
+      const char *user = json_object_get_string (j_user);
+      buf = (char *) realloc (buf, (6 + strlen (text) + strlen (user)) * sizeof (char));
+      sprintf (buf, "<%s>: %s\n", user, text);
+
+      channel_push ((char *) channel, (char *) buf);
       printf ("Received and glued: %s\n", channel_glue ((char *) channel, (char *) "\n"));
 
       // We don't really need the append logic now, buffer stores it all.
