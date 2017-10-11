@@ -90,7 +90,7 @@ display_rx_buf ()
       printf ("To channel: %s of length: %d\n\n", channel, strlen (channel));
 
       channel_push ((char *) channel, (char *) text);
-      printf ("Received and glued: %s\n", channel_glued ((char *) channel, (char *) "\n"));
+      printf ("Received and glued: %s\n", channel_glue ((char *) channel, (char *) "\n"));
 
       // We don't really need the append logic now, buffer stores it all.
       /*
@@ -104,7 +104,7 @@ display_rx_buf ()
       printf ("Rx: %s\n\n", rx_buf);
       gui_chat_text_edit->SetText (buf);
       */
-      gui_chat_text_edit->SetText (channel_glued ((char *) channel, (char *) "\n"));
+      gui_chat_text_edit->SetText (channel_glue_reverse ((char *) channel, (char *) "\n"));
 
       break;
     }

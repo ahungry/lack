@@ -27,12 +27,19 @@ main (int argc, char *argv[])
       res++;
     }
 
-  printf ("Channel glued: %s\n", channel_glued ((char *) "ABC123", (char *) "..."));
-  printf ("Channel glued: %s\n", channel_glued ((char *) "XYZ456", (char *) "\n"));
-  printf ("Channel glued: %s\n", channel_glued ((char *) "ABC123", (char *) "\n"));
+  printf ("Channel glue: %s\n", channel_glue ((char *) "ABC123", (char *) "..."));
+  printf ("Channel glue: %s\n", channel_glue ((char *) "XYZ456", (char *) "\n"));
+  printf ("Channel glue: %s\n", channel_glue ((char *) "ABC123", (char *) "\n"));
 
   if (strcmp ("Hello World...I love programming!...it sure is fun",
-              channel_glued ((char *) "ABC123", (char *) "...")))
+              channel_glue ((char *) "ABC123", (char *) "...")))
+    {
+      fprintf (stderr, "Failed to assert glue is working!");
+      res++;
+    }
+
+  if (strcmp ("it sure is fun...I love programming!...Hello World",
+              channel_glue_reverse ((char *) "ABC123", (char *) "...")))
     {
       fprintf (stderr, "Failed to assert glue is working!");
       res++;

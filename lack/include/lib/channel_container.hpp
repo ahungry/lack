@@ -139,7 +139,7 @@ channel_push (char *name, char *buf)
 }
 
 char *
-channel_glued (char *name, char *glue)
+channel_glue (char *name, char *glue)
 {
   channel_t *chan = channel_get (name);
   char *out = (char *) malloc (1 * sizeof (char));
@@ -173,6 +173,63 @@ channel_glued (char *name, char *glue)
 
       // Join starts as nothing, then switches to the glue set.
       if (i == 0)
+        {
+          join = (char *) realloc (join, (1 + gluelen) * sizeof (char));
+          memcpy (join, glue, gluelen + 1);
+          joinlen = gluelen;
+        }
+    }
+
+  // At very end, add a trailing nul
+  out = (char *) realloc (out, (total + 1) * sizeof (char));
+
+  if (NULL == out)
+    {
+      fprintf (stderr, "realloc() fail\n");
+      exit (EXIT_FAILURE);
+    }
+
+  out[total] = '\0';
+
+  return out;
+}
+
+/* Glues together the buffer data, in reverse order (so we can go down based) */
+char *
+channel_glue_reverse (char *name, char *glue)
+{
+  channel_t *chan = channel_get (name);
+  char *out = (char *) malloc (1 * sizeof (char));
+  char *join = (char *) malloc (1 * sizeof (char));
+  int i = chan->buflen - 1;
+  int chars = 0;
+  int total = 0;
+  int gluelen = strlen (glue);
+  int joinlen = 0;
+
+  join[0] = '\0';
+
+  for (; i >= 0; i--)
+    {
+      // Track the size we are copying in.
+      chars = strlen (chan->buf[i]);
+
+      out = (char *) realloc (out, (total + joinlen + chars) * sizeof (char));
+
+      if (NULL == out)
+        {
+          fprintf (stderr, "realloc() fail\n");
+          exit (EXIT_FAILURE);
+        }
+
+      memcpy (out + total, join, joinlen);
+      memcpy (out + total + joinlen, chan->buf[i], chars);
+
+      // And increment the total.
+      total += (chars + joinlen);
+
+      // Join starts as nothing, then switches to the glue set.
+      if (i == chan->buflen - 1)
         {
           join = (char *) realloc (join, (1 + gluelen) * sizeof (char));
           memcpy (join, glue, gluelen + 1);
