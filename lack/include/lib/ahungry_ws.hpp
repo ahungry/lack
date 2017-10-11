@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "json_handler.hpp"
+#include "channel_container.hpp"
 
 static struct lws *wsi_basic;
 int force_exit = 0;
@@ -36,37 +37,63 @@ int json_mode = 1;
 
 // Big 'ol buffer to store received data in.
 char *rx_buf = NULL;
+char *ephermal_rx_buf = NULL;
+int ephermal_rx_buf_lock = 0;
+int lock_in_stream = 0;
+
 // char rx_buf[10000];
 
 int
 display_rx_buf ()
 {
-  if (NULL == rx_buf)
+  // @todo This has a possibility of one json parse blocking another, for
+  // very high throughput, could cause message loss.
+
+  // If we're already working on an ephermal buffer, or it never existed.
+  if (ephermal_rx_buf_lock || NULL == ephermal_rx_buf)
     {
       return 1;
     }
 
+  ephermal_rx_buf_lock = 1; // mutex for callback
+
   // @todo Parse out the JSON parts of message
   // Ideally in it's own class or codebase.
   // ref: https://json-c.github.io/json-c/json-c-0.12.1/doc/html/json__tokener_8h.html
-  printf ("Rx: %s\n\n", rx_buf);
+  printf ("DRB: Rx: __%s__ of len: %d\n\n", ephermal_rx_buf, strlen (ephermal_rx_buf));
 
   // Find out what type of JSON we have received.
-  json_object *j = json_to_object ((char *) rx_buf);
+  json_object *j = json_to_object ((char *) ephermal_rx_buf);
   int type = j_get_type (j);    /* See what type of object */
   char *buf = NULL;
+
+  printf ("Rx JSON Type: %d, expected: %d\n", type, SLACK_TYPE_MESSAGE);
 
   switch (type)
     {
       // @todo Refactor to dispatch text to a specific channel.
     case SLACK_TYPE_MESSAGE:
       json_object *j_text = NULL;
+      json_object *j_channel = NULL;
+
       json_object_object_get_ex (j, "text", &j_text);
+      json_object_object_get_ex (j, "channel", &j_channel);
+
       const char *text = json_object_get_string (j_text);
       int len_text = strlen (text);
 
       printf ("Received text: %s of length: %d\n\n", text, len_text);
 
+      // Store the message received in a specific channel buffer.
+      const char *channel = json_object_get_string (j_channel);
+
+      printf ("To channel: %s of length: %d\n\n", channel, strlen (channel));
+
+      channel_push ((char *) channel, (char *) text);
+      printf ("Received and glued: %s\n", channel_glued ((char *) channel, (char *) "\n"));
+
+      // We don't really need the append logic now, buffer stores it all.
+      /*
       int len = strlen (gui_chat_text_edit->GetText ().c_str ());
       buf = (char *) malloc (10 * sizeof (buf) * (len + len_text + 2));
       memcpy (buf, text, len_text);
@@ -76,15 +103,21 @@ display_rx_buf ()
 
       printf ("Rx: %s\n\n", rx_buf);
       gui_chat_text_edit->SetText (buf);
+      */
+      gui_chat_text_edit->SetText (channel_glued ((char *) channel, (char *) "\n"));
 
       break;
     }
 
-  free (rx_buf); // Bad idea to have this handle the free
+  free (ephermal_rx_buf);
   free (buf);
-  rx_buf = NULL;
+  ephermal_rx_buf = NULL;
   buf = NULL;
   json_object_put (j);
+
+  // Unlock the processing thread
+  ephermal_rx_buf_lock = 0;
+  lock_in_stream = 0;
 
   return 0;
 }
@@ -112,47 +145,69 @@ static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reas
       break;
 
     case LWS_CALLBACK_CLIENT_RECEIVE:
-      ((char *) in)[len] = '\0';
+      //((char *) in)[len] = '\0';
 
-      if (json_mode) {
+      if (json_mode && ! lock_in_stream) {
         // Expand our memory
         int rx_buflen = NULL == rx_buf ? 0 : strlen (rx_buf);
-        rx_buf = (char *) realloc (rx_buf, sizeof (rx_buf) * (rx_buflen  + len));
+        rx_buf = (char *) realloc (rx_buf, (1 + rx_buflen  + len) * sizeof (char));
 
         if (NULL == rx_buf)
           {
-            fprintf (stderr, "Failed to realloc() memory!");
+            fprintf (stderr, "Failed to realloc() memory for rx_buf in CB!\n");
+            fprintf (stderr, "Received len: %d\n", len);
+            fprintf (stderr, "Received text of: %s\n", in);
+            exit (1);
           }
 
         // We could copy in batches, but we need to count braces.
+        int c = 0;
+
         for (uint i = 0; i < len; i++)
           {
-            // If we did the PT dispatch, this could be null in our loop.
-            if (NULL == rx_buf)
-              {
-                rx_buf = (char *) realloc (rx_buf, sizeof (rx_buf) + len); // May be a couple bytes too big.
-              }
-
             if ('{' == ((char*) in)[i]) json_brace_count++;
             if ('}' == ((char*) in)[i]) json_brace_count--;
 
+            // If we're not in braces, and we didn't just receive one,
+            // then ignore the input, its junk.
+            // @todo Update this to be better - I mean, we could have
+            // a non-object wrapped response (well, maybe not via slack...)
+            if (!json_brace_count && '}' != ((char *) in)[i])
+              {
+                continue;
+              }
+
             // Copy in one char at a time.
-            rx_buf[rx_buflen + i] = ((char *) in)[i];
+            rx_buf[rx_buflen + c] = ((char *) in)[i];
+            rx_buf[rx_buflen + c + 1] = '\0';
 
             // If even braces, flush buffer and output.
             if (!json_brace_count) {
+              lock_in_stream = 1;
+              ephermal_rx_buf = (char *) calloc (sizeof (char), (2 + rx_buflen + c) * sizeof (char));
+              memcpy (ephermal_rx_buf, rx_buf, rx_buflen + c + 1);
+              ephermal_rx_buf[rx_buflen + c + 1] = '\0';
+
+              // Give back our buffer and drop out of any future events.
+              free (rx_buf);
+              rx_buf = NULL;
+
               // Output to term and GUI
               gui_lifetime->PostTask (display_rx_buf);
+
+              return 0;
             }
+
+            c++; // Increment by chars we don't just 'continue' over.
           }
 
         // memcpy (rx_buf + rx_buflen, (char *) in, len + 1);
 
         // If even braces, flush buffer and output.
-        if (!json_brace_count) {
-          // Output to term and GUI
-          gui_lifetime->PostTask (display_rx_buf);
-        }
+        // if (!json_brace_count) {
+        //   // Output to term and GUI
+        //   gui_lifetime->PostTask (display_rx_buf);
+        // }
       } else {
         printf ("%s\n", (char *) in);
       }

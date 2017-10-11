@@ -29,7 +29,8 @@ cd ..
 # Make build dir for CMAKE
 [ -d build ] || mkdir build
 
-cd build && cmake -D CMAKE_BUILD_TYPE=Release .. && make VERBOSE=1
+#cd build && cmake -D CMAKE_BUILD_TYPE=Release .. && make VERBOSE=1
+cd build && cmake -D CMAKE_BUILD_TYPE=Debug .. && make VERBOSE=1
 cd ..
 
 [ -d bin ] || mkdir bin
