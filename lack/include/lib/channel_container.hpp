@@ -35,6 +35,8 @@ channel_container_t g_channel_container = { 0 };
 channel_t *
 channel_get (char *name)
 {
+  printf ("Query for channel: %s\n", name);
+
   int i = 0;
 
   for (; i < g_channel_container.len; i++)
@@ -45,59 +47,92 @@ channel_get (char *name)
         }
     }
 
-  channel_t *channel = (channel_t *) malloc (1 * sizeof (channel_t));
+  channel_t *channel = (channel_t *) calloc (sizeof (channel_t), 1 * sizeof (channel_t));
 
   if (NULL == channel)
     {
-      fprintf (stderr, "malloc() fail\n");
+      fprintf (stderr, "calloc() fail\n");
+      exit (EXIT_FAILURE);
     }
 
-  channel->name = (char *) malloc ((1 + strlen (name)) * sizeof (char));
+  channel->name = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
 
   if (NULL == channel->name)
     {
-      fprintf (stderr, "malloc() fail\n");
+      fprintf (stderr, "calloc() fail\n");
+      exit (EXIT_FAILURE);
     }
 
   memcpy (channel->name, name, 1 + strlen (name));
+  channel->buf = NULL;
 
-  channel_t **tmp = (channel_t **) realloc (g_channel_container.ptr,
-                                            (1 + i) * sizeof (channel_t *));
-
-  if (NULL == tmp)
+  if (NULL == g_channel_container.ptr)
     {
-      fprintf (stderr, "realloc() fail\n");
-    }
+      g_channel_container.ptr = (channel_t **) calloc (sizeof (channel_t *), 1 * sizeof (channel_t *));
 
-  g_channel_container.ptr = tmp;
+      if (NULL == g_channel_container.ptr)
+        {
+          fprintf (stderr, "calloc() fail\n");
+          exit (EXIT_FAILURE);
+        }
+    }
+  else
+    {
+      channel_t **tmp = (channel_t **) realloc (g_channel_container.ptr,
+                                                (1 + i) * sizeof (channel_t *));
+
+      if (NULL == tmp)
+        {
+          fprintf (stderr, "realloc() fail\n");
+          exit (EXIT_FAILURE);
+        }
+
+      g_channel_container.ptr = tmp;
+    }
 
   g_channel_container.ptr[i] = channel;
   g_channel_container.len++;
 
   return g_channel_container.ptr[i];
-
 }
 
 int
 channel_push (char *name, char *buf)
 {
   channel_t *chan = channel_get (name);
-  char **tmp = (char **) realloc (chan->buf, (1 + chan->buflen) * sizeof (char *));
 
-  if (NULL == tmp)
+  if (NULL == chan->buf)
     {
-      fprintf (stderr, "realloc() fail\n");
-    }
+      chan->buf = (char **) malloc (1 * sizeof (char *));
 
-  chan->buf = tmp;
+      if (NULL == chan->buf)
+        {
+          fprintf (stderr, "malloc() fail\n");
+          exit (EXIT_FAILURE);
+        }
+    }
+  else
+    {
+      char **tmp = (char **) realloc (chan->buf, (1 + chan->buflen) * sizeof (char *));
+
+      if (NULL == tmp)
+        {
+          fprintf (stderr, "realloc() fail\n");
+          exit (EXIT_FAILURE);
+        }
+
+      chan->buf = tmp;
+    }
 
   chan->buf[chan->buflen] = (char *) malloc ((1 + strlen (buf)) * sizeof (char));
 
   if (NULL == chan->buf[chan->buflen])
     {
       fprintf (stderr, "malloc() fail\n");
+      exit (EXIT_FAILURE);
     }
 
+  printf ("Copy buffer into chan->buf: %s %d\n", buf, strlen (buf));
   memcpy (chan->buf[chan->buflen++], buf, 1 + strlen (buf));
 
   return 0;
