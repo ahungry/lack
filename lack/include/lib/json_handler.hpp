@@ -20,13 +20,13 @@
 // We can basically create a hash map of our types using define
 #define FOREACH_SLACK_TYPE(SLACK_TYPE) \
   SLACK_TYPE(SLACK_TYPE_START) \
-  SLACK_TYPE(SLACK_TYPE_UNKNOWN) \
-  SLACK_TYPE(SLACK_TYPE_MESSAGE) \
-  SLACK_TYPE(SLACK_TYPE_HELLO) \
-  SLACK_TYPE(SLACK_TYPE_PONG) \
-  SLACK_TYPE(SLACK_TYPE_PRESENCE_CHANGE) \
-  SLACK_TYPE(SLACK_TYPE_RECONNECT_URL) \
-  SLACK_TYPE(SLACK_TYPE_FLANNEL) \
+  SLACK_TYPE(unknown) \
+  SLACK_TYPE(message) \
+  SLACK_TYPE(hello) \
+  SLACK_TYPE(pong) \
+  SLACK_TYPE(presence_change) \
+  SLACK_TYPE(reconnect_url) \
+  SLACK_TYPE(flannel) \
   SLACK_TYPE(SLACK_TYPE_END)
 
 #define GENERATE_ENUM(ENUM) ENUM,
@@ -62,21 +62,25 @@ j_get_type (json_object *j)
     {
       fprintf (stderr, "No 'type' property exists, fail!\n");
 
-      return SLACK_TYPE_UNKNOWN;
+      return unknown;
     }
 
   const char *type = json_object_get_string (j_type);
 
-  printf ("Found type: %s\n", type);
-  printf ("ENUM: %d %d %d", SLACK_TYPE_PONG, SLACK_TYPE_HELLO, SLACK_TYPE_MESSAGE);
+  printf ("Found type in j_get_type: %s\n", type);
 
   // Iterate through enum types, returning on match.
   for (int i = SLACK_TYPE_START; i != SLACK_TYPE_END; i++)
     {
-      if (!strcmp (type, SLACK_TYPE_STRING[i])) return i;
+      if (!strcmp (type, SLACK_TYPE_STRING[i]))
+        {
+          printf ("Message type is: %d, we found: %d\n", message, i);
+
+          return i;
+        }
     }
 
-  return SLACK_TYPE_UNKNOWN;
+  return unknown;
 }
 
 json_object *
