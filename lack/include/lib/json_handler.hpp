@@ -18,6 +18,7 @@
 // https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
 // https://gcc.gnu.org/onlinedocs/gcc-4.6.2/cpp/Stringification.html
 // We can basically create a hash map of our types using define
+// Note in the type map, flannel is a type that includes a subtype (others may as well).
 #define SLACK_TYPE_ENUM_PREFIX "SLACK_TYPE_"
 #define FOREACH_SLACK_TYPE(TYPE) \
   TYPE(SLACK_TYPE_START) \
@@ -39,6 +40,26 @@ enum SLACK_TYPE_ENUM {
 
 static const char *SLACK_TYPE_STRING[] = {
   FOREACH_SLACK_TYPE(GENERATE_STRING)
+};
+
+// Define the subtypes (typically under flannel type).
+#define SLACK_SUBTYPE_ENUM_PREFIX "SLACK_SUBTYPE_"
+#define FOREACH_SLACK_SUBTYPE(SUBTYPE) \
+  SUBTYPE(SLACK_SUBTYPE_unknown) \
+  SUBTYPE(SLACK_SUBTYPE_user_query_response) \
+  SUBTYPE(SLACK_SUBTYPE_END)
+
+// Have subtype start where the other one ended (to avoid collisions).
+enum SLACK_SUBTYPE_ENUM {
+  SLACK_SUBTYPE_START = SLACK_TYPE_END + 1,
+  FOREACH_SLACK_SUBTYPE(GENERATE_ENUM)
+};
+
+// This is sort of dumb...filling the string array with the type data to pad it up.
+static const char *SLACK_SUBTYPE_STRING[] = {
+  FOREACH_SLACK_TYPE(GENERATE_STRING)
+  "SLACK_SUBTYPE_START",
+  FOREACH_SLACK_SUBTYPE(GENERATE_STRING)
 };
 
 /*
@@ -69,6 +90,28 @@ j_get_type (json_object *j)
   const char *type = json_object_get_string (j_type);
 
   printf ("Found type in j_get_type: %s\n", type);
+
+  // First, see if its a type with known sub-types.
+  if (!strcmp (type, SLACK_TYPE_STRING[SLACK_TYPE_flannel] + strlen (SLACK_TYPE_ENUM_PREFIX)))
+    {
+      json_object *j_subtype = NULL;
+
+      if (json_object_object_get_ex (j, "subtype", &j_subtype))
+        {
+          const char *subtype = json_object_get_string (j_subtype);
+
+          printf ("subtype: %s\n", subtype);
+
+          for (int i = SLACK_SUBTYPE_START; i != SLACK_SUBTYPE_END; i++)
+            {
+              printf ("IN SUBTYPE: %s vs %s and offset %d\n", subtype, SLACK_SUBTYPE_STRING[i], strlen (SLACK_SUBTYPE_ENUM_PREFIX));
+              if (!strcmp (subtype, SLACK_SUBTYPE_STRING[i] + strlen (SLACK_SUBTYPE_ENUM_PREFIX)))
+                {
+                  return i;
+                }
+            }
+        }
+    }
 
   // Iterate through enum types, returning on match.
   for (int i = SLACK_TYPE_START; i != SLACK_TYPE_END; i++)

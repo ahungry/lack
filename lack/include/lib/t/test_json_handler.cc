@@ -42,7 +42,7 @@ test_get_types ()
   res += assert_int (__LINE__, __func__, "PONG", SLACK_TYPE_pong, result);
 
   result = j_get_type (json_to_object ((char *) json_type_flannel_user_query_response));
-  res += assert_int (__LINE__, __func__, "FLANNEL", SLACK_TYPE_flannel, result);
+  res += assert_int (__LINE__, __func__, "USER_QUERY_RESPONSE", SLACK_SUBTYPE_user_query_response, result);
 
   return res;
 }
