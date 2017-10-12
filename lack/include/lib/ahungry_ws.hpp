@@ -67,11 +67,9 @@ display_rx_buf ()
   int type = j_get_type (j);    /* See what type of object */
   char *buf = NULL;
 
-  printf ("Rx JSON Type: %d, expected: %d\n", type, message);
-
   switch (type)
     {
-    case message:
+    case SLACK_TYPE_message:
       json_object *j_text = NULL;
       json_object *j_channel = NULL;
 
