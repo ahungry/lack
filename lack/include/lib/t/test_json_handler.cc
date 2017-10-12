@@ -30,6 +30,7 @@ test_get_types ()
   const char *json_type_unknown = "\"some-string\"";
   const char *json_type_message = "{\"type\": \"message\", \"a\": 1}";
   const char *json_type_pong = "{\"type\": \"pong\", \"a\": 1}";
+  const char *json_type_flannel_user_query_response = "{\"type\": \"flannel\", \"subtype\": \"user_query_response\", \"a\": 1}";
 
   result = j_get_type (json_to_object ((char *) json_type_unknown));
   assert_int (__LINE__, __func__, "SLACK_TYPE_UNKNOWN", SLACK_TYPE_UNKNOWN, result);
@@ -39,6 +40,9 @@ test_get_types ()
 
   result = j_get_type (json_to_object ((char *) json_type_pong));
   assert_int (__LINE__, __func__, "SLACK_TYPE_PONG", SLACK_TYPE_PONG, result);
+
+  result = j_get_type (json_to_object ((char *) json_type_flannel_user_query_response));
+  assert_int (__LINE__, __func__, "SLACK_TYPE_FLANNEL", SLACK_TYPE_FLANNEL, result);
 
   return res;
 }

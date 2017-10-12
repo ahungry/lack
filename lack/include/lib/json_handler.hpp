@@ -15,13 +15,30 @@
 #include <json-c/json.h>
 #include <json-c/json_tokener.h>
 
-enum
-  {
-    SLACK_TYPE_UNKNOWN,
-    SLACK_TYPE_MESSAGE,
-    SLACK_TYPE_HELLO,
-    SLACK_TYPE_PONG
-  };
+// https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
+// https://gcc.gnu.org/onlinedocs/gcc-4.6.2/cpp/Stringification.html
+// We can basically create a hash map of our types using define
+#define FOREACH_SLACK_TYPE(SLACK_TYPE) \
+  SLACK_TYPE(SLACK_TYPE_START) \
+  SLACK_TYPE(SLACK_TYPE_UNKNOWN) \
+  SLACK_TYPE(SLACK_TYPE_MESSAGE) \
+  SLACK_TYPE(SLACK_TYPE_HELLO) \
+  SLACK_TYPE(SLACK_TYPE_PONG) \
+  SLACK_TYPE(SLACK_TYPE_PRESENCE_CHANGE) \
+  SLACK_TYPE(SLACK_TYPE_RECONNECT_URL) \
+  SLACK_TYPE(SLACK_TYPE_FLANNEL) \
+  SLACK_TYPE(SLACK_TYPE_END)
+
+#define GENERATE_ENUM(ENUM) ENUM,
+#define GENERATE_STRING(STRING) #STRING,
+
+enum SLACK_TYPE_ENUM {
+  FOREACH_SLACK_TYPE(GENERATE_ENUM)
+};
+
+static const char *SLACK_TYPE_STRING[] = {
+  FOREACH_SLACK_TYPE(GENERATE_STRING)
+};
 
 /*
  * Parse out the type from a message.
@@ -53,10 +70,11 @@ j_get_type (json_object *j)
   printf ("Found type: %s\n", type);
   printf ("ENUM: %d %d %d", SLACK_TYPE_PONG, SLACK_TYPE_HELLO, SLACK_TYPE_MESSAGE);
 
-  // presence change, reconnect_url
-  if (!strcmp (type, "message")) return SLACK_TYPE_MESSAGE;
-  if (!strcmp (type, "hello")) return SLACK_TYPE_HELLO;
-  if (!strcmp (type, "pong")) return SLACK_TYPE_PONG;
+  // Iterate through enum types, returning on match.
+  for (int i = SLACK_TYPE_START; i != SLACK_TYPE_END; i++)
+    {
+      if (!strcmp (type, SLACK_TYPE_STRING[i])) return i;
+    }
 
   return SLACK_TYPE_UNKNOWN;
 }

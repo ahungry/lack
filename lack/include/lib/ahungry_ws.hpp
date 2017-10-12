@@ -71,7 +71,6 @@ display_rx_buf ()
 
   switch (type)
     {
-      // @todo Refactor to dispatch text to a specific channel.
     case SLACK_TYPE_MESSAGE:
       json_object *j_text = NULL;
       json_object *j_channel = NULL;
