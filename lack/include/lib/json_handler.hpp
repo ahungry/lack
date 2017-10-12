@@ -160,4 +160,71 @@ json_to_object (char *json)
   // return j;
 }
 
+typedef struct slack_user
+{
+  char *id;
+  char *name;
+  struct slack_user *next;
+} slack_user_t;
+
+slack_user_t dummy_user = { (char *) "0", (char *) "dummy", NULL };
+slack_user_t *dummy = &dummy_user;
+
+/* Find a user object based on the passed in id */
+slack_user_t *
+slack_user_get (char *id)
+{
+  for (slack_user_t *user = dummy; user != NULL; user = user->next)
+    {
+      if (!strcmp (id, user->id)) return user;
+    }
+
+  return NULL;
+}
+
+/* Add to the user list, always assume slack will give us a full list. */
+int
+slack_user_push (char *json)
+{
+  slack_user_t *current_user = dummy;
+  json_object *j = json_to_object (json);
+  json_object *j_results = NULL;
+
+  if (! json_object_object_get_ex (j, "results", &j_results))
+    {
+      fprintf (stderr, "No 'results' property exists, fail!\n");
+
+      exit (1);
+    }
+
+  int len = json_object_array_length (j_results);
+  // array_list *results = json_object_get_array (j_results);
+
+  // https://json-c.github.io/json-c/json-c-0.12.1/doc/html/json__object_8h.html#a5c9120a6d644ea12a61e2ec8520130c6
+  for (int i = 0; i < len; i++)
+    {
+      json_object *j_user = json_object_array_get_idx (j_results, i);
+
+      json_object *j_user_id = NULL;
+      json_object_object_get_ex (j_user, "id", &j_user_id);
+      const char *user_id = json_object_get_string (j_user_id);
+
+      json_object *j_user_name = NULL;
+      json_object_object_get_ex (j_user, "name", &j_user_name);
+      const char *user_name = json_object_get_string (j_user_name);
+
+      slack_user_t *user = (slack_user_t *) calloc (sizeof (slack_user_t *),
+                                                  1 * sizeof (slack_user_t *));
+      user->id = (char *) user_id;
+      user->name = (char *) user_name;
+      user->next = NULL;
+
+      printf ("Name: %s, Id: %s\n", user->name, user->id);
+      current_user->next = user;
+      current_user = user;
+    }
+
+  return 0;
+}
+
 #endif

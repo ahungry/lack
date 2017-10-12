@@ -1,0 +1,39 @@
+{
+  "type": "flannel",
+  "subtype": "user_query_response",
+  "ok": true,
+  "results": [
+    {
+      "id": "USLACKBOT",
+      "team_id": "omit",
+      "name": "slackbot",
+      "deleted": false,
+      "color": "757575",
+      "real_name": "slackbot",
+      "tz": null,
+      "tz_label": "Pacific Daylight Time",
+      "tz_offset": -25200,
+      "profile": {
+        "first_name": "slackbot",
+        "last_name": "",
+        "avatar_hash": "sv1444671949",
+        "always_active": true,
+        "display_name": "slackbot",
+        "real_name": "slackbot",
+        "real_name_normalized": "slackbot",
+        "display_name_normalized": "slackbot",
+        "fields": null,
+        "team": "omit"
+      },
+      "is_admin": false,
+      "is_owner": false,
+      "is_primary_owner": false,
+      "is_restricted": false,
+      "is_ultra_restricted": false,
+      "is_bot": false,
+      "updated": 0,
+      "is_app_user": false,
+      "presence": "active"
+    }
+  ]
+}

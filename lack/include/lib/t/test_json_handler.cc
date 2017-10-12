@@ -48,12 +48,53 @@ test_get_types ()
 }
 
 int
+test_get_names ()
+{
+  int res = 0;
+  const char *json = "{\"type\":\"flannel\",\"subtype\":\"user_query_response\",\"ok\":true,\"results\":[{\"id\":\"USLACKBOT\",\"team_id\":\"omit\",\"name\":\"slackbot\",\"deleted\":false,\"color\":\"757575\",\"real_name\":\"slackbot\",\"tz\":null,\"tz_label\":\"PacificDaylightTime\",\"tz_offset\":-25200,\"profile\":{\"first_name\":\"slackbot\",\"last_name\":\"\",\"avatar_hash\":\"sv1444671949\",\"always_active\":true,\"display_name\":\"slackbot\",\"real_name\":\"slackbot\",\"real_name_normalized\":\"slackbot\",\"display_name_normalized\":\"slackbot\",\"fields\":null,\"team\":\"omit\"},\"is_admin\":false,\"is_owner\":false,\"is_primary_owner\":false,\"is_restricted\":false,\"is_ultra_restricted\":false,\"is_bot\":false,\"updated\":0,\"is_app_user\":false,\"presence\":\"active\"},{\"id\":\"AHU\",\"name\":\"Matthew Carter\"}]}";
+
+  slack_user_push ((char *) json);
+  slack_user_t *slackbot = slack_user_get ((char *) "USLACKBOT");
+
+  if (strcmp ("USLACKBOT", slackbot->id))
+    {
+      fprintf (stderr, "Slackbot ID was wrong, saw :%s!!\n", slackbot->id);
+      res++;
+    }
+
+  if (strcmp ("slackbot", slackbot->name))
+    {
+      fprintf (stderr, "Slackbot name was wrong, saw: %s!\n", slackbot->name);
+      res++;
+    }
+
+  // we want to assert calling multiple times is just fine.
+  slack_user_push ((char *) json);
+  slack_user_t *ahu = slack_user_get ((char *) "AHU");
+
+  if (strcmp ("AHU", ahu->id))
+    {
+      fprintf (stderr, "Ahu ID was wrong, saw :%s!!\n", ahu->id);
+      res++;
+    }
+
+  if (strcmp ("Matthew Carter", ahu->name))
+    {
+      fprintf (stderr, "Ahu name was wrong, saw: %s!\n", ahu->name);
+      res++;
+    }
+
+  return res;
+}
+
+int
 main (int argc, char *argv[])
 {
   int res = 0;
 
   printf ("\n\nBegin tests...\n");
 
+  res += test_get_names ();
   res += test_get_types ();
 
   return res;
