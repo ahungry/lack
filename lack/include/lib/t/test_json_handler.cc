@@ -33,16 +33,16 @@ test_get_types ()
   const char *json_type_flannel_user_query_response = "{\"type\": \"flannel\", \"subtype\": \"user_query_response\", \"a\": 1}";
 
   result = j_get_type (json_to_object ((char *) json_type_unknown));
-  assert_int (__LINE__, __func__, "UNKNOWN", unknown, result);
+  res += assert_int (__LINE__, __func__, "UNKNOWN", unknown, result);
 
   result = j_get_type (json_to_object ((char *) json_type_message));
-  assert_int (__LINE__, __func__, "MESSAGE", message, result);
+  res += assert_int (__LINE__, __func__, "MESSAGE", message, result);
 
   result = j_get_type (json_to_object ((char *) json_type_pong));
-  assert_int (__LINE__, __func__, "PONG", pong, result);
+  res += assert_int (__LINE__, __func__, "PONG", pong, result);
 
   result = j_get_type (json_to_object ((char *) json_type_flannel_user_query_response));
-  assert_int (__LINE__, __func__, "FLANNEL", flannel, result);
+  res += assert_int (__LINE__, __func__, "FLANNEL", flannel, result);
 
   return res;
 }
