@@ -17,8 +17,10 @@
 #include <string.h>
 
 #include "json_handler.hpp"
+#include "ahungry_http_request.hpp"
 #include "channel_container.hpp"
 
+static const char *slack_uri_channel_list = "https://slack.com/api/channels.list?token=%s";
 static struct lws *wsi_basic;
 int force_exit = 0;
 static unsigned int opts;
@@ -27,6 +29,7 @@ const char *my_message = "{\"type\":\"ping\"}";
 // {"type":"flannel", "subtype":"user_query_request"}
 int request_users_p = 1;
 char *my_user_query_request = get_user_query_request_json ((char *) "");
+channel_t *g_active_channel = NULL;
 
 // Slack token
 char *slack_token = NULL;
@@ -34,6 +37,7 @@ char *slack_token = NULL;
 // GUI related
 nu::Lifetime *gui_lifetime = NULL;
 nu::TextEdit *gui_chat_text_edit = NULL;
+nu::Scroll *gui_channel_scroll = NULL;
 
 // Handle tracking JSON structures.
 int json_brace_count = 0;
@@ -427,8 +431,125 @@ slack_rtm_connect_service_loop (void *ptr)
   return 0;
 }
 
+void *
+populate_channel_scroll ()
+{
+  // May as well fetch channels here...
+  // Lets clutter it all! haha
+  // https://slack.com/api/channels.list?token=xoxs...
+  char *uri = (char *) malloc ((strlen (slack_uri_channel_list) + strlen (slack_token)) * sizeof (char));
+  sprintf (uri, slack_uri_channel_list, slack_token);
+  Http *http = new Http (uri);
+  http->Get ();
+
+  // @todo Refactor into json_handler
+  printf ("Received channel list: %s", http->Content ());
+  json_object *j = json_to_object (http->Content ());
+  json_object *j_channels = NULL;
+  json_object_object_get_ex (j, "channels", &j_channels);
+  int j_chanlen = json_object_array_length (j_channels);
+
+  // for each channel we got, push into the channel container
+  for (int i = 0; i < j_chanlen; i++)
+    {
+      json_object *j_chan = json_object_array_get_idx (j_channels, i);
+      char *jc_id = json_get_string (j_chan, "id");
+      char *jc_name = json_get_string (j_chan, "name");
+      channel_t *o_chan = channel_get (jc_id);
+      o_chan->desc = (char *) malloc ((strlen (jc_name) + 1) * sizeof (char));
+      memcpy (o_chan->desc, jc_name, strlen (jc_name) + 1);
+    }
+
+
+  scoped_refptr<nu::Container> channel_container (new nu::Container ());
+  channel_container->SetStyle ("justify-content", "center");
+
+  nu::Button *channel_buttons[g_channel_container.len];
+
+  char *buf = NULL;
+  int chan_size = 0;
+
+  nu::App *app = nu::App::GetCurrent ();
+  nu::Font *font = app->GetDefaultFont ();
+
+  // How to easily walk through each element of an array of ptrs (total size divided by per-member size).
+  for (int i = 0; i < g_channel_container.len; i++)
+    {
+      channel_t *channel = g_channel_container.ptr[i];
+
+      chan_size = strlen (channel->desc);
+      buf = (char *) realloc (buf, 1 + chan_size);
+
+      if (NULL == buf)
+        {
+          fprintf (stderr, "Failed to malloc() for channel buf\n");
+          exit (EXIT_FAILURE);
+        }
+
+      memcpy (buf, channel->desc, chan_size);
+      buf[chan_size] = '\0';
+
+      scoped_refptr<nu::Button>
+        channel_button (new nu::Button (buf, nu::Button::Type::Normal));
+      channel_button->SetBackgroundColor (nu::Color (30, 145, 90));
+
+      // Active channel, do special things.
+      if (g_active_channel != NULL && !strcmp (channel->name, g_active_channel->name))
+        {
+           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
+        }
+      else
+        {
+           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.0, nu::Font::Weight::Thin, font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
+        }
+
+      // If we click channel, pop up that channel's text.
+      channel_button->on_click.Connect
+        ([channel_button, channel] (nu::Button *)
+         {
+           g_active_channel = channel;
+           gui_chat_text_edit->SetText (channel_glue_reverse (channel->name, (char *) "\n"));
+
+           // bump up font of active channel
+           nu::App *app = nu::App::GetCurrent ();
+           nu::Font *font = app->GetDefaultFont ();
+           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
+         });
+
+      channel_container->AddChildView (channel_button.get ());
+      channel_buttons[i] = channel_button.get ();
+
+      printf ("Chan name: %s initialized (%s) with strlen of: %d!\n",
+              channel->name, buf, strlen (channel->name));
+    }
+
+  free (buf);
+  buf = NULL;
+
+  gui_channel_scroll->SetContentView (channel_container.get ());
+
+  return 0;
+}
+
+void *
+gui_widget_update_loop (void *)
+{
+  // Option setting related
+  for (;;)
+    {
+      gui_lifetime->PostTask (populate_channel_scroll);
+      sleep (5);
+    }
+
+  return 0;
+}
+
 int
-slack_rtm_connect (char *token, nu::Lifetime *lifetime, nu::TextEdit *chat_text_edit)
+slack_rtm_connect (char *token, nu::Lifetime *lifetime,
+                   nu::TextEdit *chat_text_edit, nu::Scroll *channel_scroll)
 {
   printf ("Using token: %s\n", token);
 
@@ -439,10 +560,15 @@ slack_rtm_connect (char *token, nu::Lifetime *lifetime, nu::TextEdit *chat_text_
 
   gui_lifetime = lifetime;
   gui_chat_text_edit = chat_text_edit;
+  gui_channel_scroll = channel_scroll;
 
   pthread_t t;
   pthread_create (&t, NULL, slack_rtm_connect_service_loop, (void *) lifetime);
   // pthread_join (t, NULL);
+
+  // Create the polling interval for channel layout/display.
+  pthread_t t_gui;
+  pthread_create (&t_gui, NULL, gui_widget_update_loop, (void *) lifetime);
 
   return 0;
 }

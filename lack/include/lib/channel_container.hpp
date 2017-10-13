@@ -19,7 +19,8 @@
 typedef struct channel
 {
   int idx;
-  char *name;
+  char *name; // Really, this is the id
+  char *desc; // and this is the name. @todo fix it!
   int buflen;
   char **buf;
 } channel_t;
@@ -56,6 +57,7 @@ channel_get (char *name)
     }
 
   channel->name = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
+  channel->desc = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
 
   if (NULL == channel->name)
     {
@@ -64,6 +66,7 @@ channel_get (char *name)
     }
 
   memcpy (channel->name, name, 1 + strlen (name));
+  memcpy (channel->desc, name, 1 + strlen (name));
   channel->buf = NULL;
 
   if (NULL == g_channel_container.ptr)

@@ -76,6 +76,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   chan_text_container->AddChildView (text_scroll.get ());
 
   // List of labels / buttons for the channel list, and add the container to the scroll
+  /*
   scoped_refptr<nu::Container> channel_container (new nu::Container ());
   channel_container->SetStyle ("justify-content", "center");
 
@@ -118,6 +119,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   channel_container->AddChildView (new nu::Button ("First Channel", nu::Button::Type::Normal));
   channel_container->AddChildView (new nu::Button ("Second Channel", nu::Button::Type::Normal));
   channel_scroll->SetContentView (channel_container.get ());
+  */
 
   // Add the text to the text scroll area
   // nu::Label *chat_text_edit = new nu::Label ("Welcome to Lack...");
@@ -240,7 +242,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   // t_ret = pthread_create (&thread, NULL, thread_fn, (void*) nu::Lifetime::GetCurrent());
 
   // Launch the websocket thread.
-  slack_rtm_connect ((char *) argv[1], nu::Lifetime::GetCurrent (), chat_text_edit);
+  slack_rtm_connect ((char *) argv[1], nu::Lifetime::GetCurrent (),
+                     chat_text_edit, channel_scroll.get ());
 
   // Working empty thread
   //t_ret = pthread_create(&thread, NULL, thread_fn, NULL);
