@@ -106,6 +106,22 @@ test_get_names ()
 }
 
 int
+test_get_user_query_request_json ()
+{
+  int res = 0;
+  const char *exp = "{\"type\":\"flannel\", \"subtype\":\"user_query_request\", \"marker\":\"jon smith\"}";
+  char *rec = get_user_query_request_json ((char *) "jon smith");
+
+  if (strcmp (exp, rec))
+    {
+      fprintf (stderr, "Expected: %s, Received: %s\n", exp, rec);
+      res++;
+    }
+
+  return res;
+}
+
+int
 main (int argc, char *argv[])
 {
   int res = 0;
@@ -114,6 +130,7 @@ main (int argc, char *argv[])
 
   res += test_get_names ();
   res += test_get_types ();
+  res += test_get_user_query_request_json ();
 
   return res;
 }

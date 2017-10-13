@@ -62,6 +62,18 @@ static const char *SLACK_SUBTYPE_STRING[] = {
   FOREACH_SLACK_SUBTYPE(GENERATE_STRING)
 };
 
+/* If the marker is blank, pagination starts at 0, otherwise pass in a
+   next_marker value from another response */
+char *
+get_user_query_request_json (char *marker)
+{
+  const char *user_query_request = "{\"type\":\"flannel\", \"subtype\":\"user_query_request\", \"marker\":\"%s\"}";
+  char *buf = (char *) calloc (sizeof (char), (strlen (marker) + strlen (user_query_request)) * sizeof (char));
+  sprintf (buf, user_query_request, marker);
+
+  return buf;
+}
+
 /*
  * Parse out the type from a message.
  *
@@ -160,6 +172,17 @@ json_to_object (char *json)
   // return j;
 }
 
+/* Helper function to quickly get a key from the object. */
+char *
+json_get_string (json_object *j, const char *key)
+{
+  json_object *jobj = NULL;
+  json_object_object_get_ex (j, key, &jobj);
+  const char *val = json_object_get_string (jobj);
+
+  return (char *) val;
+}
+
 typedef struct slack_user
 {
   char *id;
@@ -207,16 +230,11 @@ slack_user_push (char *json)
   for (int i = 0; i < len; i++)
     {
       json_object *j_user = json_object_array_get_idx (j_results, i);
+      char *user_id = json_get_string (j_user, "id");
 
-      json_object *j_user_id = NULL;
-      json_object_object_get_ex (j_user, "id", &j_user_id);
-      const char *user_id = json_object_get_string (j_user_id);
+      if (slack_user_get (user_id) != NULL) continue;
 
-      if (slack_user_get ((char *) user_id) != NULL) continue;
-
-      json_object *j_user_name = NULL;
-      json_object_object_get_ex (j_user, "name", &j_user_name);
-      const char *user_name = json_object_get_string (j_user_name);
+      char *user_name = json_get_string (j_user, "name");
 
       slack_user_t *user = (slack_user_t *) calloc (sizeof (slack_user_t *),
                                                   1 * sizeof (slack_user_t *));
@@ -224,7 +242,7 @@ slack_user_push (char *json)
       user->name = (char *) user_name;
       user->next = NULL;
 
-      printf ("Name: %s, Id: %s\n", user->name, user->id);
+      printf ("Collected user name: %s, Id: %s\n", user->name, user->id);
       current_user->next = user;
       current_user = user;
     }

@@ -25,7 +25,8 @@ static unsigned int opts;
 const char *my_message = "{\"type\":\"ping\"}";
 
 // {"type":"flannel", "subtype":"user_query_request"}
-const char *my_user_query_request = "{\"type\":\"flannel\", \"subtype\":\"user_query_request\"}";
+int request_users_p = 1;
+char *my_user_query_request = get_user_query_request_json ((char *) "");
 
 // Slack token
 char *slack_token = NULL;
@@ -63,43 +64,47 @@ display_rx_buf ()
   // @todo Parse out the JSON parts of message
   // Ideally in it's own class or codebase.
   // ref: https://json-c.github.io/json-c/json-c-0.12.1/doc/html/json__tokener_8h.html
-  printf ("DRB: Rx: __%s__ of len: %d\n\n", ephermal_rx_buf, strlen (ephermal_rx_buf));
+  // printf ("DRB: Rx: __%s__ of len: %d\n\n", ephermal_rx_buf, strlen (ephermal_rx_buf));
 
   // Find out what type of JSON we have received.
   json_object *j = json_to_object ((char *) ephermal_rx_buf);
   int type = j_get_type (j);    /* See what type of object */
+
+  // Used for user query request pagination.
+  char *next_marker = json_get_string (j, "next_marker");
   char *buf = NULL;
 
   switch (type)
     {
     case SLACK_SUBTYPE_user_query_response:
+      // If we can find a next_marker value, we need to get more names out.
+      if (NULL != next_marker)
+        {
+          request_users_p = 1;
+          my_user_query_request = get_user_query_request_json (next_marker);
+        }
+      else
+        {
+          request_users_p = 0;
+        }
+
       slack_user_push ((char *) ephermal_rx_buf); // @todo re-use parsed object.
       break;
 
     case SLACK_TYPE_message:
-      json_object *j_text = NULL;
-      json_object *j_channel = NULL;
-
-      json_object_object_get_ex (j, "text", &j_text);
-      json_object_object_get_ex (j, "channel", &j_channel);
-
-      const char *text = json_object_get_string (j_text);
+      char *text = json_get_string (j, "text");
       int len_text = strlen (text);
 
       printf ("Received text: %s of length: %d\n\n", text, len_text);
 
       // Store the message received in a specific channel buffer.
-      const char *channel = json_object_get_string (j_channel);
+      char *channel = json_get_string (j, "channel");
 
       printf ("To channel: %s of length: %d\n\n", channel, strlen (channel));
 
-      // Add the user name
-      json_object *j_user = NULL;
-      json_object_object_get_ex (j, "user", &j_user);
-
       // @todo Translate user to a display name
       // {"type":"flannel", "subtype":"user_query_request"}
-      const char *user = json_object_get_string (j_user);
+      char *user = json_get_string (j, "user");
 
       // At this point, user is the id.
       slack_user_t *slack_user = slack_user_get ((char *) user);
@@ -112,8 +117,8 @@ display_rx_buf ()
         }
       else
         {
-          buf = (char *) realloc (buf, (6 + strlen (text) + strlen (slack_user->name)) * sizeof (char));
-          sprintf (buf, "<%s>: %s\n", slack_user->name, text);
+          buf = (char *) realloc (buf, (5 + strlen (text) + strlen (slack_user->name)) * sizeof (char));
+          sprintf (buf, "<%s>: %s", slack_user->name, text);
         }
 
       channel_push ((char *) channel, (char *) buf);
@@ -154,7 +159,7 @@ display_rx_buf ()
 static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reason,
                                  void *user, void *in, size_t len)
 {
-  char buf[50 + LWS_PRE];
+  char buf[150 + LWS_PRE];
   int deny_deflate = 1;
 
   switch (reason)
@@ -277,12 +282,13 @@ static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reas
       // request it trigger on demand).
     case LWS_CALLBACK_CLIENT_WRITEABLE:
       // Send the ping pong to keep connection alive.
-      printf ("Wrote %s of strlen %d\n", my_message, (int) strlen ((char *) my_message));
-      strcpy (buf, my_message);
-      lws_write (wsi, (unsigned char *) buf, 15, (lws_write_protocol)(opts | LWS_WRITE_TEXT));
+      // @todo Track a time delay for how often we want to do this.
+      // printf ("Wrote %s of strlen %d\n", my_message, (int) strlen ((char *) my_message));
+      // strcpy (buf, my_message);
+      // lws_write (wsi, (unsigned char *) buf, 15, (lws_write_protocol)(opts | LWS_WRITE_TEXT));
 
       // Request the users, if we don't have one after the dummy user.
-      if (NULL == dummy->next)
+      if (request_users_p)
         {
           printf ("Wrote %s of strlen %d\n", my_user_query_request, (int) strlen ((char *) my_user_query_request));
           strcpy (buf, my_user_query_request);
