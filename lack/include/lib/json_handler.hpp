@@ -197,6 +197,9 @@ slack_user_push (char *json)
       exit (1);
     }
 
+  // Shift to end of user chain.
+  for (; current_user->next != NULL; current_user = current_user->next);
+
   int len = json_object_array_length (j_results);
   // array_list *results = json_object_get_array (j_results);
 
@@ -208,6 +211,8 @@ slack_user_push (char *json)
       json_object *j_user_id = NULL;
       json_object_object_get_ex (j_user, "id", &j_user_id);
       const char *user_id = json_object_get_string (j_user_id);
+
+      if (slack_user_get ((char *) user_id) != NULL) continue;
 
       json_object *j_user_name = NULL;
       json_object_object_get_ex (j_user, "name", &j_user_name);

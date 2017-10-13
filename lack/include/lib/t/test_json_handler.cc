@@ -51,7 +51,9 @@ int
 test_get_names ()
 {
   int res = 0;
-  const char *json = "{\"type\":\"flannel\",\"subtype\":\"user_query_response\",\"ok\":true,\"results\":[{\"id\":\"USLACKBOT\",\"team_id\":\"omit\",\"name\":\"slackbot\",\"deleted\":false,\"color\":\"757575\",\"real_name\":\"slackbot\",\"tz\":null,\"tz_label\":\"PacificDaylightTime\",\"tz_offset\":-25200,\"profile\":{\"first_name\":\"slackbot\",\"last_name\":\"\",\"avatar_hash\":\"sv1444671949\",\"always_active\":true,\"display_name\":\"slackbot\",\"real_name\":\"slackbot\",\"real_name_normalized\":\"slackbot\",\"display_name_normalized\":\"slackbot\",\"fields\":null,\"team\":\"omit\"},\"is_admin\":false,\"is_owner\":false,\"is_primary_owner\":false,\"is_restricted\":false,\"is_ultra_restricted\":false,\"is_bot\":false,\"updated\":0,\"is_app_user\":false,\"presence\":\"active\"},{\"id\":\"AHU\",\"name\":\"Matthew Carter\"}]}";
+  const char *json = "{\"type\":\"flannel\",\"subtype\":\"user_query_response\",\"ok\":true,\"next_marker\":\"jon smith\",\"results\":[{\"id\":\"USLACKBOT\",\"team_id\":\"omit\",\"name\":\"slackbot\",\"deleted\":false,\"color\":\"757575\",\"real_name\":\"slackbot\",\"tz\":null,\"tz_label\":\"PacificDaylightTime\",\"tz_offset\":-25200,\"profile\":{\"first_name\":\"slackbot\",\"last_name\":\"\",\"avatar_hash\":\"sv1444671949\",\"always_active\":true,\"display_name\":\"slackbot\",\"real_name\":\"slackbot\",\"real_name_normalized\":\"slackbot\",\"display_name_normalized\":\"slackbot\",\"fields\":null,\"team\":\"omit\"},\"is_admin\":false,\"is_owner\":false,\"is_primary_owner\":false,\"is_restricted\":false,\"is_ultra_restricted\":false,\"is_bot\":false,\"updated\":0,\"is_app_user\":false,\"presence\":\"active\"},{\"id\":\"AHU\",\"name\":\"Matthew Carter\"}]}";
+
+  const char *json_next = "{\"type\":\"flannel\",\"subtype\":\"user_query_response\",\"ok\":true,\"next_marker\":\"jon smith\",\"results\":[{\"id\":\"ABC123\",\"team_id\":\"omit\",\"name\":\"alphabet\",\"deleted\":false,\"color\":\"757575\",\"real_name\":\"alphabet\",\"tz\":null,\"tz_label\":\"PacificDaylightTime\",\"tz_offset\":-25200,\"profile\":{\"first_name\":\"alpha\",\"last_name\":\"\",\"avatar_hash\":\"sv1444671949\",\"always_active\":true,\"display_name\":\"alpha\",\"real_name\":\"alpha\",\"real_name_normalized\":\"alpha\",\"display_name_normalized\":\"alpha\",\"fields\":null,\"team\":\"omit\"},\"is_admin\":false,\"is_owner\":false,\"is_primary_owner\":false,\"is_restricted\":false,\"is_ultra_restricted\":false,\"is_bot\":false,\"updated\":0,\"is_app_user\":false,\"presence\":\"active\"},{\"id\":\"XYZ123\",\"name\":\"Betalpha\"}]}";
 
   slack_user_push ((char *) json);
   slack_user_t *slackbot = slack_user_get ((char *) "USLACKBOT");
@@ -70,6 +72,8 @@ test_get_names ()
 
   // we want to assert calling multiple times is just fine.
   slack_user_push ((char *) json);
+  slack_user_push ((char *) json_next);
+  slack_user_push ((char *) json);
   slack_user_t *ahu = slack_user_get ((char *) "AHU");
 
   if (strcmp ("AHU", ahu->id))
@@ -81,6 +85,20 @@ test_get_names ()
   if (strcmp ("Matthew Carter", ahu->name))
     {
       fprintf (stderr, "Ahu name was wrong, saw: %s!\n", ahu->name);
+      res++;
+    }
+
+  slack_user_t *beta = slack_user_get ((char *) "XYZ123");
+
+  if (strcmp ("XYZ123", beta->id))
+    {
+      fprintf (stderr, "Beta ID was wrong, saw :%s!!\n", beta->id);
+      res++;
+    }
+
+  if (strcmp ("Betalpha", beta->name))
+    {
+      fprintf (stderr, "Beta name was wrong, saw: %s!\n", beta->name);
       res++;
     }
 
