@@ -259,9 +259,9 @@ channel_glue_reverse (char *name, char *glue)
 
 /* Retrieve remote channel information from server. */
 int
-channel_fetch (char *slack_token)
+channel_fetch ()
 {
-  SlackSdk *sdk = new SlackSdk (slack_token);
+  SlackSdk *sdk = new SlackSdk ();
   char *list = sdk->GetChannelsList ();
 
   printf ("Received channel list: %s", list);

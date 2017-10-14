@@ -35,7 +35,8 @@ int test_slack_sdk_test ()
 {
   int res = 0;
 
-  SlackSdk *sdk = new SlackSdk ("fake");
+  SlackToken::token = "fake";
+  SlackSdk *sdk = new SlackSdk ();
   char *buf = sdk->GetTest ();
 
   const char *e = "{\"ok\":false,\"error\":\"invalid_auth\"}";

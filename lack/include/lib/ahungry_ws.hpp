@@ -433,7 +433,7 @@ slack_rtm_connect_service_loop (void *ptr)
 void *
 populate_channel_scroll ()
 {
-  channel_fetch (slack_token);
+  channel_fetch ();
   scoped_refptr<nu::Container> channel_container (new nu::Container ());
   channel_container->SetStyle ("justify-content", "center");
 
@@ -514,7 +514,7 @@ gui_widget_update_loop (void *)
   for (;;)
     {
       gui_lifetime->PostTask (populate_channel_scroll);
-      sleep (5);
+      sleep (600);
     }
 
   return 0;
@@ -525,6 +525,7 @@ slack_rtm_connect (char *token, nu::Lifetime *lifetime,
                    nu::TextEdit *chat_text_edit, nu::Scroll *channel_scroll)
 {
   printf ("Using token: %s\n", token);
+  SlackToken::token = token;
 
   // Bind to top level variables.
   slack_token = (char *) malloc (strlen (token) * sizeof (char) + 1);
