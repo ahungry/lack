@@ -17,8 +17,7 @@
 
 #include "json_handler.hpp"
 #include "ahungry_http_request.hpp"
-
-static const char *slack_uri_channel_list = "https://slack.com/api/channels.list?token=%s";
+#include "slack_sdk.hpp"
 
 typedef struct channel
 {
@@ -262,18 +261,14 @@ channel_glue_reverse (char *name, char *glue)
 int
 channel_fetch (char *slack_token)
 {
-  // May as well fetch channels here...
-  // Lets clutter it all! haha
-  // https://slack.com/api/channels.list?token=xoxs...
-  char *uri = (char *) malloc ((strlen (slack_uri_channel_list) + strlen (slack_token)) * sizeof (char));
-  sprintf (uri, slack_uri_channel_list, slack_token);
-  Http *http = new Http (uri);
-  http->Get ();
+  SlackSdk *sdk = new SlackSdk (slack_token);
+  char *list = sdk->GetChannelsList ();
 
-  // @todo Refactor into json_handler
-  printf ("Received channel list: %s", http->Content ());
-  json_object *j = json_to_object (http->Content ());
+  printf ("Received channel list: %s", list);
+
+  json_object *j = json_to_object (list);
   json_object *j_channels = NULL;
+
   json_object_object_get_ex (j, "channels", &j_channels);
   int j_chanlen = json_object_array_length (j_channels);
 

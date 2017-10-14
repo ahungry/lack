@@ -1,17 +1,15 @@
 /* Serve as mapping for Slack endpoints */
+#ifndef AHUNGRY_SLACK_SDK_H
+#define AHUNGRY_SLACK_SDK_H
 
 #include <string>
 #include "ahungry_http_request.hpp"
 
 using namespace std;
 
-static const char *slack_uri_channel_list = "https://slack.com/api/channels.list?token=%s";
-
 class SlackSdk
 {
   const string root = "https://slack.com/api/";
-  const string uri_api_test = "api.test";
-  const string uri_channels_list = "channels.list";
   string token;
 
 public:
@@ -48,7 +46,11 @@ SlackSdk::HttpGetRequest (string uri)
   Http *http = new Http (uri.c_str ());
   http->Get ();
 
-  return http->Content ();
+  char *buf = (char *) calloc (sizeof (char), (1 + strlen (http->Content())) * sizeof (char));
+  memcpy (buf, http->Content (), 1 + strlen (http->Content ()));
+  delete http;
+
+  return buf;
 }
 
 char *
@@ -60,11 +62,13 @@ SlackSdk::Get (string uri)
 char *
 SlackSdk::GetTest ()
 {
-  return this->Get (this->uri_api_test);
+  return this->Get ("api.test");
 }
 
 char *
 SlackSdk::GetChannelsList ()
 {
-  return this->Get (this->uri_channels_list);
+  return this->Get ("channels.list");
 }
+
+#endif /* end AHUNGRY_SLACK_SDK_H */
