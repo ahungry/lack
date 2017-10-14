@@ -19,9 +19,10 @@ class Http
 {
   char *buf = NULL;
   //char buf[10000];
-  const char *domain;
 
 public:
+  const char *domain;
+
   typedef struct cstring {
     char *ptr;
     size_t len;

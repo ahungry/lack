@@ -20,7 +20,6 @@
 #include "ahungry_http_request.hpp"
 #include "channel_container.hpp"
 
-static const char *slack_uri_channel_list = "https://slack.com/api/channels.list?token=%s";
 static struct lws *wsi_basic;
 int force_exit = 0;
 static unsigned int opts;
@@ -434,33 +433,7 @@ slack_rtm_connect_service_loop (void *ptr)
 void *
 populate_channel_scroll ()
 {
-  // May as well fetch channels here...
-  // Lets clutter it all! haha
-  // https://slack.com/api/channels.list?token=xoxs...
-  char *uri = (char *) malloc ((strlen (slack_uri_channel_list) + strlen (slack_token)) * sizeof (char));
-  sprintf (uri, slack_uri_channel_list, slack_token);
-  Http *http = new Http (uri);
-  http->Get ();
-
-  // @todo Refactor into json_handler
-  printf ("Received channel list: %s", http->Content ());
-  json_object *j = json_to_object (http->Content ());
-  json_object *j_channels = NULL;
-  json_object_object_get_ex (j, "channels", &j_channels);
-  int j_chanlen = json_object_array_length (j_channels);
-
-  // for each channel we got, push into the channel container
-  for (int i = 0; i < j_chanlen; i++)
-    {
-      json_object *j_chan = json_object_array_get_idx (j_channels, i);
-      char *jc_id = json_get_string (j_chan, "id");
-      char *jc_name = json_get_string (j_chan, "name");
-      channel_t *o_chan = channel_get (jc_id);
-      o_chan->desc = (char *) malloc ((strlen (jc_name) + 1) * sizeof (char));
-      memcpy (o_chan->desc, jc_name, strlen (jc_name) + 1);
-    }
-
-
+  channel_fetch (slack_token);
   scoped_refptr<nu::Container> channel_container (new nu::Container ());
   channel_container->SetStyle ("justify-content", "center");
 

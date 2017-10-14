@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "../ahungry_http_request.hpp"
+#include "../slack_sdk.hpp"
 
 int test_ahungry_http_request ()
 {
@@ -23,9 +24,30 @@ int test_ahungry_http_request ()
       res++;
     }
 
-  printf ("buf was: %s", bufSlice);
+  printf ("buf was: %s\n", bufSlice);
 
   delete http;
+
+  return res;
+}
+
+int test_slack_sdk_test ()
+{
+  int res = 0;
+
+  SlackSdk *sdk = new SlackSdk ("fake");
+  char *buf = sdk->GetTest ();
+
+  const char *e = "{\"ok\":false,\"error\":\"invalid_auth\"}";
+  if (strcmp (e, buf))
+    {
+      fprintf (stderr, "Failed to match slack response:\n'%s' vs '%s'", e, buf);
+      res++;
+    }
+
+  printf ("buf was: %s\n", buf);
+
+  delete sdk;
 
   return res;
 }
@@ -37,6 +59,7 @@ int main ()
   printf ("\n\nBegin tests...\n");
 
   res += test_ahungry_http_request ();
+  res += test_slack_sdk_test ();
 
   return res;
 }
