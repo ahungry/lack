@@ -3,6 +3,9 @@
 #ifndef AHUNGRY_CHANNEL_CONTAINER_H
 #define AHUNGRY_CHANNEL_CONTAINER_H
 
+#include <iostream>
+#include <string>
+
 #include "nativeui/nativeui.h"
 
 #include <getopt.h>
@@ -18,6 +21,8 @@
 #include "json_handler.hpp"
 #include "ahungry_http_request.hpp"
 #include "slack_sdk.hpp"
+
+using namespace std;
 
 typedef struct channel
 {
@@ -36,6 +41,8 @@ typedef struct channel_container
 
 channel_container_t g_channel_container = { 0 };
 
+int channel_history_fetch (channel *channel);
+
 channel_t *
 channel_get (char *name)
 {
@@ -43,6 +50,7 @@ channel_get (char *name)
 
   int i = 0;
 
+  // Seek for a matching channel based on the name (id)
   for (; i < g_channel_container.len; i++)
     {
       if (!strcmp (name, g_channel_container.ptr[i]->name))
@@ -70,7 +78,10 @@ channel_get (char *name)
 
   memcpy (channel->name, name, 1 + strlen (name));
   memcpy (channel->desc, name, 1 + strlen (name));
+
+  // Here, we need to add to buffer the channel history.
   channel->buf = NULL;
+  channel_history_fetch (channel);
 
   if (NULL == g_channel_container.ptr)
     {
@@ -102,11 +113,10 @@ channel_get (char *name)
   return g_channel_container.ptr[i];
 }
 
+/* Like the other one, but without the explicit get */
 int
-channel_push (char *name, char *buf)
+channel_push_to_channel (char *name, char *buf, channel_t *chan)
 {
-  channel_t *chan = channel_get (name);
-
   if (NULL == chan->buf)
     {
       chan->buf = (char **) malloc (1 * sizeof (char *));
@@ -142,6 +152,15 @@ channel_push (char *name, char *buf)
   memcpy (chan->buf[chan->buflen++], buf, 1 + strlen (buf));
 
   return 0;
+}
+
+/* Push data into a channel, creating it if it doesn't exist. */
+int
+channel_push (char *name, char *buf)
+{
+  channel_t *chan = channel_get (name);
+
+  return channel_push_to_channel (name, buf, chan);
 }
 
 char *
@@ -281,6 +300,69 @@ channel_fetch ()
       channel_t *o_chan = channel_get (jc_id);
       o_chan->desc = (char *) malloc ((strlen (jc_name) + 1) * sizeof (char));
       memcpy (o_chan->desc, jc_name, strlen (jc_name) + 1);
+    }
+}
+
+/* Retrieve the history for the channel currently queried. */
+int
+channel_history_fetch (channel *channel)
+{
+  // Fire request for history of channel if we have to make a new one.
+  SlackSdk *sdk = new SlackSdk ();
+  string history = sdk->GetChannelsHistory (channel->name);
+
+  if (history.size () < 1)
+    {
+      return 1;
+    }
+
+  cout << "Received channel history: " << history << '\n';
+  json_object *j = json_to_object ((char *) history.c_str ());
+
+  // If response was not ok, abort.
+  json_object *j_ok = NULL;
+  json_object_object_get_ex (j, "ok", &j_ok);
+  json_bool ok = json_object_get_boolean (j_ok);
+
+  if (!ok)
+    {
+      return 1;
+    }
+
+  json_object *j_messages = NULL;
+  json_object_object_get_ex (j, "messages", &j_messages);
+  int j_messagelen = json_object_array_length (j_messages);
+
+  printf ("Have %d messages\n", j_messagelen);
+
+  // for each message we got, push into the channel buffer
+  for (int i = 0; i < j_messagelen; i++)
+    {
+      json_object *j_msg = json_object_array_get_idx (j_messages, i);
+      char *user = json_get_string (j_msg, "user");
+      char *text = json_get_string (j_msg, "text");
+      slack_user_t *slack_user = slack_user_get ((char *) user);
+      char *buf = (char *) calloc (sizeof (char), (6 + strlen (text) + strlen (user)) * sizeof (char));
+
+      if (NULL == buf)
+        {
+          fprintf (stderr, "Failed to calloc() for buf.\n");
+          exit (EXIT_FAILURE);
+        }
+
+      if (NULL == slack_user)
+        {
+          sprintf (buf, "<%s>: %s\n", user, text);
+        }
+      else
+        {
+          // May need more space for this one.
+          buf = (char *) realloc (buf, (6 + strlen (text) + strlen (slack_user->name)) * sizeof (char));
+          sprintf (buf, "<%s>: %s\n", slack_user->name, text);
+        }
+
+      printf ("Buf was: %s\n", buf);
+      channel_push_to_channel (channel->name, buf, channel);
     }
 }
 

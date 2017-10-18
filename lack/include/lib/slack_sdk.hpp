@@ -2,6 +2,7 @@
 #ifndef AHUNGRY_SLACK_SDK_H
 #define AHUNGRY_SLACK_SDK_H
 
+#include <vector>
 #include <iostream>
 #include <string>
 #include "ahungry_http_request.hpp"
@@ -26,11 +27,12 @@ public:
 
   char * GetTest ();
   char * GetChannelsList ();
+  char * GetChannelsHistory (char *id);
 
 private:
-  string GenUrl (const string uri);
+  string GenUrl (const string uri, vector<string> *args);
   char * HttpGetRequest (string uri);
-  char * Get (string uri);
+  char * Get (string uri, vector<string> *args);
 };
 
 SlackSdk::SlackSdk ()
@@ -42,9 +44,19 @@ SlackSdk::~SlackSdk ()
 }
 
 string
-SlackSdk::GenUrl (const string uri)
+SlackSdk::GenUrl (const string uri, vector<string> *args)
 {
-  return this->root + uri + "?token=" + SlackToken::token;
+  string url = this->root + uri + "?token=" + SlackToken::token;
+
+  if (NULL != args)
+    {
+      for (uint i = 0; i < args->size (); i += 2)
+        {
+          url += "&" + (*args)[i] + "=" + (*args)[i + 1];
+        }
+    }
+
+  return url;
 }
 
 char *
@@ -63,21 +75,30 @@ SlackSdk::HttpGetRequest (string uri)
 }
 
 char *
-SlackSdk::Get (string uri)
+SlackSdk::Get (string uri, vector<string> *args)
 {
-  return this->HttpGetRequest (this->GenUrl (uri));
+  return this->HttpGetRequest (this->GenUrl (uri, args));
 }
 
 char *
 SlackSdk::GetTest ()
 {
-  return this->Get ("api.test");
+  return this->Get ("api.test", NULL);
 }
 
 char *
 SlackSdk::GetChannelsList ()
 {
-  return this->Get ("channels.list");
+  return this->Get ("channels.list", NULL);
+}
+
+char *
+SlackSdk::GetChannelsHistory (char *id)
+{
+  string str (id);
+  vector<string> args = { "channel", id, "limit", "100" };
+
+  return this->Get ("channels.history", &args);
 }
 
 #endif /* end AHUNGRY_SLACK_SDK_H */
