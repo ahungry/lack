@@ -336,7 +336,7 @@ channel_history_fetch (channel *channel)
   printf ("Have %d messages\n", j_messagelen);
 
   // for each message we got, push into the channel buffer
-  for (int i = 0; i < j_messagelen; i++)
+  for (int i = j_messagelen - 1; i >= 0; i--)
     {
       json_object *j_msg = json_object_array_get_idx (j_messages, i);
       char *user = json_get_string (j_msg, "user");
@@ -352,13 +352,13 @@ channel_history_fetch (channel *channel)
 
       if (NULL == slack_user)
         {
-          sprintf (buf, "<%s>: %s\n", user, text);
+          sprintf (buf, "<%s>: %s", user, text);
         }
       else
         {
           // May need more space for this one.
           buf = (char *) realloc (buf, (6 + strlen (text) + strlen (slack_user->name)) * sizeof (char));
-          sprintf (buf, "<%s>: %s\n", slack_user->name, text);
+          sprintf (buf, "<%s>: %s", slack_user->name, text);
         }
 
       printf ("Buf was: %s\n", buf);

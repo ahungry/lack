@@ -513,6 +513,8 @@ gui_widget_update_loop (void *)
   // Option setting related
   for (;;)
     {
+      sleep (5); // @todo This is a quick fix for needing to load all
+                 // user data before channels.
       gui_lifetime->PostTask (populate_channel_scroll);
       sleep (600);
     }
