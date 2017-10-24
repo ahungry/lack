@@ -28,6 +28,7 @@ public:
   char * GetTest ();
   char * GetChannelsList ();
   char * GetChannelsHistory (char *id);
+  char * GetUsersInfo (char *id);
 
 private:
   string GenUrl (const string uri, vector<string> *args);
@@ -101,6 +102,15 @@ SlackSdk::GetChannelsHistory (char *id)
   vector<string> args = { "channel", id, "count", "10" };
 
   return this->Get ("channels.history", &args);
+}
+
+char *
+SlackSdk::GetUsersInfo (char *id)
+{
+  string str (id);
+  vector<string> args = { "user", id };
+
+  return this->Get ("users.info", &args);
 }
 
 #endif /* end AHUNGRY_SLACK_SDK_H */

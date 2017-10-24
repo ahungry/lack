@@ -14,6 +14,7 @@
 #include <libwebsockets.h>
 #include <json-c/json.h>
 #include <json-c/json_tokener.h>
+#include "lib/slack_sdk.hpp"
 
 // https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
 // https://gcc.gnu.org/onlinedocs/gcc-4.6.2/cpp/Stringification.html
@@ -202,7 +203,34 @@ slack_user_get (char *id)
       if (!strcmp (id, user->id)) return user;
     }
 
-  return NULL;
+  // If we get here, it means we never found a corresponding user, so
+  // lets request it on the fly for our program.
+  SlackSdk *sdk = new SlackSdk ();
+  char *json = sdk->GetUsersInfo (id);
+  json_object *j = json_to_object (json);
+  json_object *j_user = json_to_object (json);
+
+  if (! json_object_object_get_ex (j, "user", &j_user))
+    {
+      return NULL;
+    }
+
+  slack_user_t *current_user = dummy;
+  for (; current_user->next != NULL; current_user = current_user->next);
+
+  char *user_id = json_get_string (j_user, "id");
+  char *user_name = json_get_string (j_user, "name");
+
+  slack_user_t *user = (slack_user_t *) calloc (sizeof (slack_user_t *),
+                                                1 * sizeof (slack_user_t *));
+  user->id = (char *) user_id;
+  user->name = (char *) user_name;
+  user->next = NULL;
+
+  printf ("Collected user name: %s, Id: %s\n", user->name, user->id);
+  current_user->next = user;
+
+  return user;
 }
 
 /* Add to the user list, always assume slack will give us a full list. */

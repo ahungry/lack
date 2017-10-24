@@ -26,7 +26,7 @@ static unsigned int opts;
 const char *my_message = "{\"type\":\"ping\"}";
 
 // {"type":"flannel", "subtype":"user_query_request"}
-int request_users_p = 1;
+int request_users_p = 0; // @todo Re-enable this if we ever want a full user list.
 char *my_user_query_request = get_user_query_request_json ((char *) "");
 channel_t *g_active_channel = NULL;
 
