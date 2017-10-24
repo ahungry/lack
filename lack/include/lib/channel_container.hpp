@@ -116,7 +116,16 @@ channel_get (char *name)
 
       // json_object *j_is_im = json_object_object_get_ex (
       // Fill out from json response.
-      chan_desc = json_get_string (j_chan, is_im ? "user" : "name");
+      if (is_im)
+        {
+          char *slack_user_id = json_get_string (j_chan, "user");
+          slack_user_t *slack_user = slack_user_get ((char *) slack_user_id);
+          chan_desc = slack_user->name;
+        }
+      else
+        {
+          chan_desc = json_get_string (j_chan, "name");
+        }
 
       cout << "------------\n\n\n------------CHAN DESC " << chan_desc << '\n';
     }
