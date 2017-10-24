@@ -89,14 +89,16 @@ SlackSdk::GetTest ()
 char *
 SlackSdk::GetChannelsList ()
 {
-  return this->Get ("channels.list", NULL);
+  vector<string> args = { "exclude_members", "true", "exclude_archived", "true" };
+
+  return this->Get ("channels.list", &args);
 }
 
 char *
 SlackSdk::GetChannelsHistory (char *id)
 {
   string str (id);
-  vector<string> args = { "channel", id, "limit", "100" };
+  vector<string> args = { "channel", id, "count", "10" };
 
   return this->Get ("channels.history", &args);
 }

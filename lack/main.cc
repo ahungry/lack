@@ -21,6 +21,7 @@
 // Lack related
 #include "lib/ahungry_http_request.hpp"
 #include "lib/ahungry_ws.hpp"
+#include "lib/channel_container.hpp"
 
 #if defined(OS_WIN)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -244,6 +245,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   // Launch the websocket thread.
   slack_rtm_connect ((char *) argv[1], nu::Lifetime::GetCurrent (),
                      chat_text_edit, channel_scroll.get ());
+
+  set_channels_to_view (argv[2]);
 
   // Working empty thread
   //t_ret = pthread_create(&thread, NULL, thread_fn, NULL);

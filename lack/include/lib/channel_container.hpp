@@ -42,6 +42,35 @@ typedef struct channel_container
 channel_container_t g_channel_container = { 0 };
 
 int channel_history_fetch (channel *channel);
+vector<string> channels_to_view;
+
+void
+set_channels_to_view (const char *csv_channels)
+{
+  int v = 0;
+  string channel_name = "";
+
+  for (int i = 0; i < strlen (csv_channels); i++)
+    {
+      if (',' == csv_channels[i])
+        {
+          // New channel if we find a comma.
+          channels_to_view.push_back (channel_name);
+          channel_name = "";
+          v++;
+          continue;
+        }
+
+      channel_name += csv_channels[i];
+    }
+
+  channels_to_view.push_back (channel_name);
+
+  for (uint i = 0; i < channels_to_view.size (); i++)
+    {
+      cout << "channels in are: " << channels_to_view[i] << '\n';
+    }
+}
 
 channel_t *
 channel_get (char *name)
@@ -291,12 +320,34 @@ channel_fetch ()
   json_object_object_get_ex (j, "channels", &j_channels);
   int j_chanlen = json_object_array_length (j_channels);
 
-  // for each channel we got, push into the channel container
+  // For each channel we got, push into the channel container
+  // @todo if it's a channel we are configured to care about.
   for (int i = 0; i < j_chanlen; i++)
     {
       json_object *j_chan = json_object_array_get_idx (j_channels, i);
       char *jc_id = json_get_string (j_chan, "id");
       char *jc_name = json_get_string (j_chan, "name");
+
+      // Before we fetch the channel, ensure it's one the user cares
+      // about viewing.
+      int view_p = 0;
+
+      for (uint ctv = 0; ctv < channels_to_view.size (); ctv++)
+        {
+          if (!strcmp (channels_to_view[ctv].c_str (), jc_name)
+              || !strcmp (channels_to_view[ctv].c_str (), "all"))
+            {
+              view_p = 1;
+              break;
+            }
+        }
+
+      if (!view_p)
+        {
+          cout << "Skipping adding channel " << jc_name << '\n';
+          continue;
+        }
+
       channel_t *o_chan = channel_get (jc_id);
       o_chan->desc = (char *) malloc ((strlen (jc_name) + 1) * sizeof (char));
       memcpy (o_chan->desc, jc_name, strlen (jc_name) + 1);

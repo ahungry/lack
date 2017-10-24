@@ -290,6 +290,7 @@ static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reas
       // strcpy (buf, my_message);
       // lws_write (wsi, (unsigned char *) buf, 15, (lws_write_protocol)(opts | LWS_WRITE_TEXT));
 
+      // @todo Refactor into the slack sdk, more reliable response.
       // Request the users, if we don't have one after the dummy user.
       if (request_users_p)
         {
@@ -513,7 +514,7 @@ gui_widget_update_loop (void *)
   // Option setting related
   for (;;)
     {
-      sleep (5); // @todo This is a quick fix for needing to load all
+      sleep (1); // @todo This is a quick fix for needing to load all
                  // user data before channels.
       gui_lifetime->PostTask (populate_channel_scroll);
       sleep (600);
