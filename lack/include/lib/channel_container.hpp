@@ -97,16 +97,46 @@ channel_get (char *name)
     }
 
   channel->name = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
-  channel->desc = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
 
-  if (NULL == channel->name)
+  // Here, we can fetch the desc given the name (id).
+  SlackSdk *sdk = new SlackSdk ();
+  char *info = sdk->GetChannelsInfo (name);
+  json_object *j = json_to_object (info);
+  json_object *j_chan;
+  char *chan_desc = NULL;
+
+  cout << "-------------------------------" << info << " WAS THE JSON" << '\n';
+
+  if (json_object_object_get_ex (j, "channel", &j_chan))
+    {
+      // If it is a channel, use the name, otherwise if im use user
+      json_object *j_is_im = NULL;
+      json_object_object_get_ex (j_chan, "is_im", &j_is_im);
+      json_bool is_im = json_object_get_boolean (j_is_im);
+
+      // json_object *j_is_im = json_object_object_get_ex (
+      // Fill out from json response.
+      chan_desc = json_get_string (j_chan, is_im ? "user" : "name");
+
+      cout << "------------\n\n\n------------CHAN DESC " << chan_desc << '\n';
+    }
+  else
+    {
+      chan_desc = (char *) calloc (sizeof (char), (1 + strlen (name)) * sizeof (char));
+      memcpy (chan_desc, name, strlen (name) + 1);
+      cout << "------------\n\n\n------------MISSING CHAN DESC " << chan_desc << '\n';
+    }
+
+  channel->desc = (char *) calloc (sizeof (char), (1 + strlen (chan_desc)) * sizeof (char));
+
+  if (NULL == channel->name || NULL == channel->desc)
     {
       fprintf (stderr, "calloc() fail\n");
       exit (EXIT_FAILURE);
     }
 
   memcpy (channel->name, name, 1 + strlen (name));
-  memcpy (channel->desc, name, 1 + strlen (name));
+  memcpy (channel->desc, chan_desc, 1 + strlen (chan_desc));
 
   // Here, we need to add to buffer the channel history.
   channel->buf = NULL;

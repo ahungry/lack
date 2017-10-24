@@ -28,6 +28,7 @@ public:
   char * GetTest ();
   char * GetChannelsList ();
   char * GetChannelsHistory (char *id);
+  char * GetChannelsInfo (char *id);
   char * GetUsersInfo (char *id);
 
 private:
@@ -102,6 +103,15 @@ SlackSdk::GetChannelsHistory (char *id)
   vector<string> args = { "channel", id, "count", "10" };
 
   return this->Get ("channels.history", &args);
+}
+
+char *
+SlackSdk::GetChannelsInfo (char *id)
+{
+  string str (id);
+  vector<string> args = { "channel", id };
+
+  return this->Get ("conversations.info", &args);
 }
 
 char *
