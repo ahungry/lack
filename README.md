@@ -4,9 +4,25 @@ A Slack GUI built using the Yue GUI framework (https://github.com/yue/yue)
 
 # Purpose
 
-To be a fast (non-bloated) Slack GUI.
+To be a fast (non-bloated) cross platform Slack GUI (sorry, Electron
+is *way* too slow).
 
 ![Lack](https://raw.githubusercontent.com/ahungry/lack/master/lack.png)
+
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Lack](#lack)
+- [Purpose](#purpose)
+- [Usage](#usage)
+- [Notes](#notes)
+    - [Mac Support](#mac-support)
+        - [Requirements](#requirements)
+        - [How To](#how-to)
+- [License](#license)
+
+<!-- markdown-toc end -->
 
 # Usage
 
