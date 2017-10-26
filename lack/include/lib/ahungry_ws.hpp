@@ -431,9 +431,17 @@ slack_rtm_connect_service_loop (void *ptr)
   return 0;
 }
 
+int last_channel_length = 0;
+
 void *
 populate_channel_scroll ()
 {
+  // Only run if channels have changed.
+  if (last_channel_length > 0 && g_channel_container.len == last_channel_length)
+    {
+      return 0;
+    }
+
   channel_fetch ();
   scoped_refptr<nu::Container> channel_container (new nu::Container ());
   channel_container->SetStyle ("justify-content", "center");
@@ -471,12 +479,12 @@ populate_channel_scroll ()
       if (g_active_channel != NULL && !strcmp (channel->name, g_active_channel->name))
         {
            scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
-           channel_button->SetFont (my_font.get ());
+           //channel_button->SetFont (my_font.get ());
         }
       else
         {
            scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.0, nu::Font::Weight::Thin, font->GetStyle ()));
-           channel_button->SetFont (my_font.get ());
+           //channel_button->SetFont (my_font.get ());
         }
 
       // If we click channel, pop up that channel's text.
@@ -490,7 +498,7 @@ populate_channel_scroll ()
            nu::App *app = nu::App::GetCurrent ();
            nu::Font *font = app->GetDefaultFont ();
            scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
-           channel_button->SetFont (my_font.get ());
+           //channel_button->SetFont (my_font.get ());
          });
 
       channel_container->AddChildView (channel_button.get ());
@@ -505,6 +513,8 @@ populate_channel_scroll ()
 
   gui_channel_scroll->SetContentView (channel_container.get ());
 
+  last_channel_length = g_channel_container.len;
+
   return 0;
 }
 
@@ -517,7 +527,7 @@ gui_widget_update_loop (void *)
       sleep (1); // @todo This is a quick fix for needing to load all
                  // user data before channels.
       gui_lifetime->PostTask (populate_channel_scroll);
-      sleep (600);
+      sleep (1);
     }
 
   return 0;
