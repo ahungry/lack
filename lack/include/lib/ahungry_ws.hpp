@@ -560,4 +560,20 @@ slack_rtm_connect (char *token, nu::Lifetime *lifetime,
   return 0;
 }
 
+void *
+async_send_message (void *ptr)
+{
+  if (NULL == g_active_channel) return 0; // No channel, no message.
+  char *buf = (char *) ptr;
+
+  fprintf (stderr, "About to send the message: %s\n", buf);
+  SlackSdk *sdk = new SlackSdk ();
+
+  sdk->ChatPostMessage ((char *) g_active_channel->name, buf);
+
+  delete sdk;
+
+  return 0;
+}
+
 #endif

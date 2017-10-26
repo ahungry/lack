@@ -148,15 +148,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     ([text_entry] (nu::Entry*)
      {
        // Send message.
-       std::string tmp = text_entry->GetText ();
-       std::string buf = tmp;
+       std::string buf = text_entry->GetText ();
+       char *text = (char *) calloc (sizeof (char), (buf.size () * sizeof (char)));
+       memcpy (text, buf.c_str (), buf.size ());
+
+       pthread_t m_thread;
+       int m_t_ret;
+
+       m_t_ret = pthread_create (&m_thread, NULL, async_send_message, (void *) text);
 
        // Clear message.
        text_entry->SetText ("");
-
-       SlackSdk *sdk = new SlackSdk ();
-       sdk->ChatPostMessage ((char *) g_active_channel->name, (char *) buf.c_str ());
-       delete sdk;
      });
 
   interaction_container->AddChildView (text_entry.get ());
@@ -167,15 +169,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     ([chat_text_edit, text_entry] (nu::Button*)
      {
        // Send message.
-       std::string tmp = text_entry->GetText ();
-       std::string buf = tmp;
+       std::string buf = text_entry->GetText ();
+       char *text = (char *) calloc (sizeof (char), (buf.size () * sizeof (char)));
+       memcpy (text, buf.c_str (), buf.size ());
+
+       pthread_t m_thread;
+       int m_t_ret;
+
+       m_t_ret = pthread_create (&m_thread, NULL, async_send_message, (void *) text);
 
        // Clear message.
        text_entry->SetText ("");
-
-       SlackSdk *sdk = new SlackSdk ();
-       sdk->ChatPostMessage ((char *) g_active_channel->name, (char *) buf.c_str ());
-       delete sdk;
      });
 
   interaction_container->AddChildView (button.get ());
