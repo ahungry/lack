@@ -36,7 +36,7 @@ After this, try it out as such:
 ```
 
 You can also run just against specific channels, as such (maybe your
-org has hundreds and you only actively use 2 or so.
+org has hundreds and you only actively use 2 or so).
 
 ```sh
 ./build/lack xoxs-<your-slack-token-here> random,general # Run hooked to 2 channels
