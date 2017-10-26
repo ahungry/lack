@@ -26,7 +26,8 @@ static unsigned int opts;
 const char *my_message = "{\"type\":\"ping\"}";
 
 // {"type":"flannel", "subtype":"user_query_request"}
-int request_users_p = 1;
+int request_users_p = 0;
+int request_users_pending_p = 0;
 char *my_user_query_request = get_user_query_request_json ((char *) "");
 channel_t *g_active_channel = NULL;
 
@@ -92,6 +93,7 @@ display_rx_buf ()
         }
 
       slack_user_push ((char *) ephermal_rx_buf); // @todo re-use parsed object.
+      request_users_pending_p = 0;
       break;
 
     case SLACK_TYPE_message:
@@ -299,7 +301,7 @@ static int callback_protocol_fn (struct lws *wsi, enum lws_callback_reasons reas
 
       // @todo Refactor into the slack sdk, more reliable response.
       // Request the users, if we don't have one after the dummy user.
-      if (request_users_p)
+      if (request_users_p && !request_users_pending_p)
         {
           printf ("Wrote %s of strlen %d\n", my_user_query_request, (int) strlen ((char *) my_user_query_request));
           strcpy (buf, my_user_query_request);
