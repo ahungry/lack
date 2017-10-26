@@ -1,39 +1,52 @@
 # Lack
 
-A Slack GUI built using the Yue (https://github.com/yue/yue)
+A Slack GUI built using the Yue GUI framework (https://github.com/yue/yue)
 
 # Purpose
 
 To be a fast (non-bloated) Slack GUI.
 
-# Note
+# Usage
 
-This is *very* early/WIP, do not bother to use, just poking around the
-framework for the most part.
+After cloning the repository, just run `./build.sh` to handle the
+building process for you.
 
-Also - my C/C++ is a bit *LACK*ing (get it?  haha...how many puns can
-we fit in here?).
+After this, try it out as such:
 
-# Building
+```sh
+./build/lack xoxs-<your-slack-token-here> all # Run hooked to all channels
+```
 
-At the moment the following libs will need to be installed (don't
-worry, at some point their checks will be incorporated into the build
-process and hopefully a real ./configure script/check).
+You can also run just against specific channels, as such (maybe your
+org has hundreds and you only actively use 2 or so.
 
-- libwebsockets
-- libcurl
+```sh
+./build/lack xoxs-<your-slack-token-here> random,general # Run hooked to 2 channels
+```
 
-# License
+In either case, if you receive a direct message, a new channel will
+open up automatically with the messaging user.
 
-GPLv3
+Speaking of messaging, you can open a channel with a fellow user as
+such:
 
-# Mac Support
+```sh
+/msg <theirName> <your message>
+```
 
-## Requirements
+Which will also pop open a new channel (sending them the initial message).
+
+# Notes
+
+This is *very* early/WIP, expect bugs, use at your own risk!
+
+## Mac Support
+
+### Requirements
 
 * Brew
 
-## How To
+### How To
 
 * Make sure Brew is up to date: `brew update`
 * Install libwebsockets: `brew install websockets`
@@ -44,3 +57,7 @@ GPLv3
 Source for symlink matter: https://webcache.googleusercontent.com/search?q=cache:VmqURJIU6iAJ:https://solitum.net/openssl-os-x-el-capitan-and-brew/+&cd=1&hl=en&ct=clnk&gl=us
 
 * Run `./build.sh`
+
+# License
+
+GPLv3
