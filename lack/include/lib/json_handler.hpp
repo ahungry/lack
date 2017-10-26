@@ -194,6 +194,18 @@ typedef struct slack_user
 slack_user_t dummy_user = { (char *) "0", (char *) "dummy", NULL };
 slack_user_t *dummy = &dummy_user;
 
+/* Get an existing user object based on the name */
+slack_user_t *
+slack_user_get_by_name (char *name)
+{
+  for (slack_user_t *user = dummy; user != NULL; user = user->next)
+    {
+      if (!strcmp (name, user->name)) return user;
+    }
+
+  return NULL;
+}
+
 /* Find a user object based on the passed in id */
 slack_user_t *
 slack_user_get (char *id)

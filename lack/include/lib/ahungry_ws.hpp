@@ -26,7 +26,7 @@ static unsigned int opts;
 const char *my_message = "{\"type\":\"ping\"}";
 
 // {"type":"flannel", "subtype":"user_query_request"}
-int request_users_p = 0; // @todo Re-enable this if we ever want a full user list.
+int request_users_p = 1;
 char *my_user_query_request = get_user_query_request_json ((char *) "");
 channel_t *g_active_channel = NULL;
 
@@ -560,6 +560,8 @@ slack_rtm_connect (char *token, nu::Lifetime *lifetime,
   return 0;
 }
 
+/* In general, send a message to the channel that is active, unless
+   we are prefixing with a /msg target. */
 void *
 async_send_message (void *ptr)
 {
@@ -567,11 +569,45 @@ async_send_message (void *ptr)
   char *buf = (char *) ptr;
 
   fprintf (stderr, "About to send the message: %s\n", buf);
-  SlackSdk *sdk = new SlackSdk ();
 
-  sdk->ChatPostMessage ((char *) g_active_channel->name, buf);
+  // @todo Refactor to a message parsing system / case from there.
+  if (!strncmp ("/msg ", buf, 5))
+    {
+      // In this case, we are probably trying to message a user.
+      char *user_name = NULL;
+      int i = 5;
 
-  delete sdk;
+      for (; i < strlen (buf - 5); i++)
+        {
+          if (' ' == buf[i]) break;
+        }
+
+      user_name = (char *) calloc (sizeof (char), (1 + (i - 5)) * sizeof (char));
+      memcpy (user_name, buf + 5, i - 5);
+      *(user_name + 1 + i - 5) = '\0';
+
+      printf ("Found username: [%s]\n", user_name);
+
+      slack_user_t *user = slack_user_get_by_name (user_name);
+
+      if (NULL == user)
+        {
+          printf ("No matching user record, sorry!\n");
+
+          return 0; // No matching user, leave.
+        }
+
+      // @todo Print a message about user not found or something.
+      SlackSdk *sdk = new SlackSdk ();
+      sdk->ChatPostMessage ((char *) user->id, buf + 5 + strlen (user_name));
+      delete sdk;
+    }
+  else
+    {
+      SlackSdk *sdk = new SlackSdk ();
+      sdk->ChatPostMessage ((char *) g_active_channel->name, buf);
+      delete sdk;
+    }
 
   return 0;
 }
