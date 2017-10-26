@@ -133,22 +133,51 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   // Change the font
   nu::App *app = nu::App::GetCurrent ();
   nu::Font *font = app->GetDefaultFont ();
-  scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.2, font->GetWeight (), font->GetStyle ()));
+
+  scoped_refptr<nu::Font> my_font
+    (new nu::Font (font->GetName (), font->GetSize () * 1.2,
+                   font->GetWeight (), font->GetStyle ()));
+
   chat_text_edit->SetFont (my_font.get ());
   text_scroll->SetContentView (chat_text_edit);
 
   // Now, put some buttons in our bottom slot, the interaction_container
   scoped_refptr<nu::Entry> text_entry (new nu::Entry ());
   text_entry->SetStyle ("flex", 1);
+  text_entry->on_activate.Connect
+    ([text_entry] (nu::Entry*)
+     {
+       // Send message.
+       std::string tmp = text_entry->GetText ();
+       std::string buf = tmp;
+
+       // Clear message.
+       text_entry->SetText ("");
+
+       SlackSdk *sdk = new SlackSdk ();
+       sdk->ChatPostMessage ((char *) g_active_channel->name, (char *) buf.c_str ());
+       delete sdk;
+     });
+
   interaction_container->AddChildView (text_entry.get ());
 
   scoped_refptr<nu::Button> button (new nu::Button ("Send", nu::Button::Type::Normal));
   button->SetStyle ("max-width", 50);
-  button->on_click.Connect ([chat_text_edit] (nu::Button*)
-                            {
-                              std::string buf = chatBuf;
-                              chat_text_edit->SetText (buf);
-                            });
+  button->on_click.Connect
+    ([chat_text_edit, text_entry] (nu::Button*)
+     {
+       // Send message.
+       std::string tmp = text_entry->GetText ();
+       std::string buf = tmp;
+
+       // Clear message.
+       text_entry->SetText ("");
+
+       SlackSdk *sdk = new SlackSdk ();
+       sdk->ChatPostMessage ((char *) g_active_channel->name, (char *) buf.c_str ());
+       delete sdk;
+     });
+
   interaction_container->AddChildView (button.get ());
 
   scoped_refptr<nu::Button> help_button (new nu::Button ("Help", nu::Button::Type::Normal));

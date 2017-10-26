@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "ahungry_http_request.hpp"
+#include "urlencode.hpp"
 
 using namespace std;
 
@@ -29,6 +30,7 @@ public:
   char * GetChannelsList ();
   char * GetChannelsHistory (char *id);
   char * GetUsersInfo (char *id);
+  char * ChatPostMessage (char *id, char *text);
 
 private:
   string GenUrl (const string uri, vector<string> *args);
@@ -111,6 +113,19 @@ SlackSdk::GetUsersInfo (char *id)
   vector<string> args = { "user", id };
 
   return this->Get ("users.info", &args);
+}
+
+char *
+SlackSdk::ChatPostMessage (char *id, char *text)
+{
+  string s_id (id);
+  string s_text (text);
+
+  s_text = url_encode (s_text);
+
+  vector<string> args = { "channel", id, "text", s_text };
+
+  return this->Get ("chat.postMessage", &args);
 }
 
 #endif /* end AHUNGRY_SLACK_SDK_H */
