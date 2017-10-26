@@ -139,7 +139,14 @@ display_rx_buf ()
       printf ("Rx: %s\n\n", rx_buf);
       gui_chat_text_edit->SetText (buf);
       */
-      gui_chat_text_edit->SetText (channel_glue_reverse ((char *) channel, (char *) "\n"));
+
+      // @todo We shouldn't set GUI text on receive event, let the main display loop handle that.
+      // What we should do, is send this to a stream window to watch it all display as it comes in perhaps.
+      // gui_chat_text_edit->SetText (channel_glue_reverse ((char *) channel, (char *) "\n"));
+      if (g_active_channel != NULL && !strcmp (channel, g_active_channel->name))
+        {
+          gui_chat_text_edit->SetText (channel_glue_reverse ((char *) channel, (char *) "\n"));
+        }
 
       break;
     }
@@ -475,16 +482,31 @@ populate_channel_scroll ()
         channel_button (new nu::Button (buf, nu::Button::Type::Normal));
       channel_button->SetBackgroundColor (nu::Color (30, 145, 90));
 
+      if (g_active_channel != NULL)
+        {
+          printf ("Active channel debug: [%s] vs [%s]\n",
+                  g_active_channel->name,
+                  channel->name);
+        }
+
       // Active channel, do special things.
       if (g_active_channel != NULL && !strcmp (channel->name, g_active_channel->name))
         {
-           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
-           //channel_button->SetFont (my_font.get ());
+           scoped_refptr<nu::Font> my_font
+             (new nu::Font (font->GetName (),
+                            font->GetSize () * 1.5,
+                            nu::Font::Weight::ExtraBold,
+                            font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
         }
       else
         {
-           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.0, nu::Font::Weight::Thin, font->GetStyle ()));
-           //channel_button->SetFont (my_font.get ());
+           scoped_refptr<nu::Font> my_font
+             (new nu::Font (font->GetName (),
+                            font->GetSize () * 1.0,
+                            nu::Font::Weight::Thin,
+                            font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
         }
 
       // If we click channel, pop up that channel's text.
@@ -497,8 +519,14 @@ populate_channel_scroll ()
            // bump up font of active channel
            nu::App *app = nu::App::GetCurrent ();
            nu::Font *font = app->GetDefaultFont ();
-           scoped_refptr<nu::Font> my_font (new nu::Font (font->GetName (), font->GetSize () * 1.5, nu::Font::Weight::ExtraBold, font->GetStyle ()));
-           //channel_button->SetFont (my_font.get ());
+           scoped_refptr<nu::Font> my_font
+             (new nu::Font (font->GetName (),
+                            font->GetSize () * 1.5,
+                            nu::Font::Weight::ExtraBold,
+                            font->GetStyle ()));
+           channel_button->SetFont (my_font.get ());
+
+           last_channel_length = 0; // Allows re-running the big font.
          });
 
       channel_container->AddChildView (channel_button.get ());
