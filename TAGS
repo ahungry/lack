@@ -1,0 +1,129 @@
+
+lack/include/lib/ahungry_http_request.hpp,547
+#define AHUNGRY_HTTP_REQUEST_H2,31
+static char *chatBuf;chatBuf14,226
+class Http18,278
+  char *buf buf20,291
+  typedef struct cstring 26,364
+    char *ptr;ptr27,391
+    size_t len;28,406
+  } cstring;29,422
+Http::Http Http44,691
+Http::~Http ~Http50,776
+size_t Http::Writefunc(Writefunc56,836
+Http::InitString InitString77,1331
+void Http::Get Get91,1619
+char *Http::Content Content129,2433
+void *bye_label_ptr bye_label_ptr134,2481
+set_bye_label_ptr 138,2566
+int c 143,2624
+ahungry_http_task 146,2640
+thread_fn 171,3150
+
+lack/include/lib/urlencode.hpp,25
+string url_encode 9,167
+
+lack/include/lib/channel_container.hpp,635
+#define AHUNGRY_CHANNEL_CONTAINER_H4,130
+typedef struct channel27,556
+  int idx;29,581
+  char *name;name30,592
+  char *desc;desc31,632
+  int buflen;32,685
+  char **buf;buf33,699
+} channel_t;34,713
+typedef struct channel_container36,727
+  size_t len;38,762
+  channel_t **ptr;ptr39,776
+} channel_container_t;40,795
+channel_container_t g_channel_container 42,819
+vector<string> channels_to_view;45,915
+set_channels_to_view 48,954
+channel_get 76,1558
+channel_push_to_channel 186,4759
+channel_push 227,5724
+channel_glue 235,5866
+channel_glue_reverse 292,7244
+channel_fetch 349,8621
+channel_history_fetch 398,10096
+
+lack/include/lib/slack_sdk.hpp,646
+#define AHUNGRY_SLACK_SDK_H3,71
+class SlackToken13,240
+  static string token;16,267
+string SlackToken::token;19,294
+class SlackSdk21,321
+  const string root 23,338
+SlackSdk::SlackSdk SlackSdk42,796
+SlackSdk::~SlackSdk ~SlackSdk46,823
+SlackSdk::GenUrl GenUrl51,858
+SlackSdk::HttpGetRequest HttpGetRequest67,1169
+SlackSdk::Get Get82,1516
+SlackSdk::GetTest GetTest88,1635
+SlackSdk::GetChannelsList GetChannelsList94,1707
+SlackSdk::GetChannelsHistory GetChannelsHistory102,1877
+SlackSdk::GetChannelsInfo GetChannelsInfo111,2055
+SlackSdk::GetUsersInfo GetUsersInfo120,2217
+SlackSdk::ChatPostMessage ChatPostMessage129,2365
+
+lack/include/lib/ahungry_ws.hpp,1094
+#define AHUNGRY_WS_H2,21
+static struct lws *wsi_basic;wsi_basic23,419
+int force_exit 24,449
+static unsigned int opts;25,469
+const char *my_message my_message26,495
+int request_users_p 29,598
+char *my_user_query_request my_user_query_request30,623
+channel_t *g_active_channel g_active_channel31,696
+char *slack_token slack_token34,748
+nu::Lifetime *gui_lifetime gui_lifetime37,790
+nu::TextEdit *gui_chat_text_edit gui_chat_text_edit38,825
+nu::Scroll *gui_channel_scroll gui_channel_scroll39,866
+int json_brace_count 42,942
+int json_mode 43,968
+char *rx_buf rx_buf46,1033
+char *ephermal_rx_buf ephermal_rx_buf47,1054
+int ephermal_rx_buf_lock 48,1084
+int lock_in_stream 49,1114
+display_rx_buf 54,1167
+static int callback_protocol_fn 169,5181
+static const struct lws_protocols protocols[protocols320,10187
+static const struct lws_extension exts[exts332,10487
+slack_rtm_connect_service_loop 347,10808
+int last_channel_length 441,13058
+populate_channel_scroll 444,13095
+gui_widget_update_loop 550,16531
+slack_rtm_connect 565,16826
+async_send_message 594,17741
+
+lack/include/lib/json_handler.hpp,1053
+#define AHUNGRY_JSON_HANDLER_H2,31
+#define SLACK_TYPE_ENUM_PREFIX 23,661
+#define FOREACH_SLACK_TYPE(24,706
+#define GENERATE_ENUM(35,1004
+#define GENERATE_STRING(36,1038
+enum SLACK_TYPE_ENUM 38,1080
+  FOREACH_SLACK_TYPE(39,1103
+  FOREACH_SLACK_TYPE(GENERATE_ENUM)39,1103
+static const char *SLACK_TYPE_STRING[SLACK_TYPE_STRING42,1143
+#define SLACK_SUBTYPE_ENUM_PREFIX 47,1283
+#define FOREACH_SLACK_SUBTYPE(48,1334
+enum SLACK_SUBTYPE_ENUM 54,1558
+  SLACK_SUBTYPE_START 55,1584
+  FOREACH_SLACK_SUBTYPE(56,1628
+  FOREACH_SLACK_SUBTYPE(GENERATE_ENUM)56,1628
+static const char *SLACK_SUBTYPE_STRING[SLACK_SUBTYPE_STRING60,1755
+get_user_query_request_json 69,2033
+j_get_type 92,2621
+json_to_object 142,4041
+json_get_string 178,4860
+typedef struct slack_user187,5063
+  char *id;id189,5091
+  char *name;name190,5103
+  struct slack_user *next;next191,5117
+} slack_user_t;192,5144
+slack_user_t dummy_user 194,5161
+slack_user_t *dummy dummy195,5229
+slack_user_get_by_name 199,5332
+slack_user_get 211,5586
+slack_user_push 250,6765
