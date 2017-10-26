@@ -6,6 +6,8 @@ A Slack GUI built using the Yue GUI framework (https://github.com/yue/yue)
 
 To be a fast (non-bloated) Slack GUI.
 
+![Lack](https://raw.githubusercontent.com/ahungry/lack/master/lack.png)
+
 # Usage
 
 After cloning the repository, just run `./build.sh` to handle the
