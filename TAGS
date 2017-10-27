@@ -66,35 +66,36 @@ SlackSdk::GetChannelsInfo GetChannelsInfo111,2055
 SlackSdk::GetUsersInfo GetUsersInfo120,2217
 SlackSdk::ChatPostMessage ChatPostMessage129,2365
 
-lack/include/lib/ahungry_ws.hpp,1094
+lack/include/lib/ahungry_ws.hpp,1131
 #define AHUNGRY_WS_H2,21
 static struct lws *wsi_basic;wsi_basic23,419
 int force_exit 24,449
 static unsigned int opts;25,469
 const char *my_message my_message26,495
 int request_users_p 29,598
-char *my_user_query_request my_user_query_request30,623
-channel_t *g_active_channel g_active_channel31,696
-char *slack_token slack_token34,748
-nu::Lifetime *gui_lifetime gui_lifetime37,790
-nu::TextEdit *gui_chat_text_edit gui_chat_text_edit38,825
-nu::Scroll *gui_channel_scroll gui_channel_scroll39,866
-int json_brace_count 42,942
-int json_mode 43,968
-char *rx_buf rx_buf46,1033
-char *ephermal_rx_buf ephermal_rx_buf47,1054
-int ephermal_rx_buf_lock 48,1084
-int lock_in_stream 49,1114
-display_rx_buf 54,1167
-static int callback_protocol_fn 169,5181
-static const struct lws_protocols protocols[protocols320,10187
-static const struct lws_extension exts[exts332,10487
-slack_rtm_connect_service_loop 347,10808
-int last_channel_length 441,13058
-populate_channel_scroll 444,13095
-gui_widget_update_loop 550,16531
-slack_rtm_connect 565,16826
-async_send_message 594,17741
+int request_users_pending_p 30,623
+char *my_user_query_request my_user_query_request31,656
+channel_t *g_active_channel g_active_channel32,729
+char *slack_token slack_token35,781
+nu::Lifetime *gui_lifetime gui_lifetime38,823
+nu::TextEdit *gui_chat_text_edit gui_chat_text_edit39,858
+nu::Scroll *gui_channel_scroll gui_channel_scroll40,899
+int json_brace_count 43,975
+int json_mode 44,1001
+char *rx_buf rx_buf47,1066
+char *ephermal_rx_buf ephermal_rx_buf48,1087
+int ephermal_rx_buf_lock 49,1117
+int lock_in_stream 50,1147
+display_rx_buf 55,1200
+static int callback_protocol_fn 171,5249
+static const struct lws_protocols protocols[protocols322,10283
+static const struct lws_extension exts[exts334,10583
+slack_rtm_connect_service_loop 349,10904
+int last_channel_length 443,13154
+populate_channel_scroll 446,13191
+gui_widget_update_loop 552,16627
+slack_rtm_connect 567,16922
+async_send_message 596,17837
 
 lack/include/lib/json_handler.hpp,1053
 #define AHUNGRY_JSON_HANDLER_H2,31
