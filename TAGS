@@ -54,17 +54,17 @@ class SlackToken13,240
 string SlackToken::token;19,294
 class SlackSdk21,321
   const string root 23,338
-SlackSdk::SlackSdk SlackSdk42,796
-SlackSdk::~SlackSdk ~SlackSdk46,823
-SlackSdk::GenUrl GenUrl51,858
-SlackSdk::HttpGetRequest HttpGetRequest67,1169
-SlackSdk::Get Get82,1516
-SlackSdk::GetTest GetTest88,1635
-SlackSdk::GetChannelsList GetChannelsList94,1707
-SlackSdk::GetChannelsHistory GetChannelsHistory102,1877
-SlackSdk::GetChannelsInfo GetChannelsInfo111,2055
-SlackSdk::GetUsersInfo GetUsersInfo120,2217
-SlackSdk::ChatPostMessage ChatPostMessage129,2365
+SlackSdk::SlackSdk SlackSdk42,797
+SlackSdk::~SlackSdk ~SlackSdk46,824
+SlackSdk::GenUrl GenUrl51,859
+SlackSdk::HttpGetRequest HttpGetRequest67,1171
+SlackSdk::Get Get82,1518
+SlackSdk::GetTest GetTest88,1637
+SlackSdk::GetChannelsList GetChannelsList94,1709
+SlackSdk::GetChannelsHistory GetChannelsHistory102,1879
+SlackSdk::GetChannelsInfo GetChannelsInfo111,2059
+SlackSdk::GetUsersInfo GetUsersInfo120,2223
+SlackSdk::ChatPostMessage ChatPostMessage129,2373
 
 lack/include/lib/ahungry_ws.hpp,1131
 #define AHUNGRY_WS_H2,21

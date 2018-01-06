@@ -34,7 +34,7 @@ public:
   char * ChatPostMessage (char *id, char *text);
 
 private:
-  string GenUrl (const string uri, vector<string> *args);
+  string GenUrl (const string &uri, vector<string> *args);
   char * HttpGetRequest (string uri);
   char * Get (string uri, vector<string> *args);
 };
@@ -48,7 +48,7 @@ SlackSdk::~SlackSdk ()
 }
 
 string
-SlackSdk::GenUrl (const string uri, vector<string> *args)
+SlackSdk::GenUrl (const string &uri, vector<string> *args)
 {
   string url = this->root + uri + "?token=" + SlackToken::token;
 
@@ -101,7 +101,7 @@ SlackSdk::GetChannelsList ()
 char *
 SlackSdk::GetChannelsHistory (char *id)
 {
-  string str (id);
+  //string str (id);
   vector<string> args = { "channel", id, "count", "10" };
 
   return this->Get ("channels.history", &args);
@@ -110,7 +110,7 @@ SlackSdk::GetChannelsHistory (char *id)
 char *
 SlackSdk::GetChannelsInfo (char *id)
 {
-  string str (id);
+  //string str (id);
   vector<string> args = { "channel", id };
 
   return this->Get ("conversations.info", &args);
@@ -119,7 +119,7 @@ SlackSdk::GetChannelsInfo (char *id)
 char *
 SlackSdk::GetUsersInfo (char *id)
 {
-  string str (id);
+  //string str (id);
   vector<string> args = { "user", id };
 
   return this->Get ("users.info", &args);
@@ -128,7 +128,7 @@ SlackSdk::GetUsersInfo (char *id)
 char *
 SlackSdk::ChatPostMessage (char *id, char *text)
 {
-  string s_id (id);
+  //string s_id (id);
   string s_text (text);
 
   s_text = url_encode (s_text);
